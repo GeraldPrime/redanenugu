@@ -1,0 +1,440 @@
+{% extends 'user/base.html' %}
+
+{% block title %}{{ member.company_name }} - Member Details{% endblock %}
+
+{% block content %}
+<div class="content-page">
+  <div class="content">
+    <div class="container-fluid mt-4">
+
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Member Details</h2>
+        <div>
+          <a href="{% url 'edit_member' member.id %}" class="btn btn-warning">
+            <i class="fas fa-edit"></i> Edit Member
+          </a>
+          <a href="{% url 'members_list' %}" class="btn btn-secondary ml-2">
+            <i class="fas fa-arrow-left"></i> Back to Members
+          </a>
+        </div>
+      </div>
+
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <div class="row">
+        <!-- Main Information Card -->
+        <div class="col-md-8">
+          <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+              <h4 class="mb-0">{{ member.company_name }}</h4>
+            </div>
+            <div class="card-body">
+              
+              <!-- Company Information -->
+              <div class="row mb-4">
+                <div class="col-12">
+                  <h5 class="text-primary border-bottom pb-2">Company Information</h5>
+                </div>
+              </div>
+              
+              <div class="row">
+                <div class="col-md-6">
+                  <p><strong>Company Name:</strong><br>{{ member.company_name }}</p>
+                </div>
+                <div class="col-md-6">
+                  <p><strong>RC Number:</strong><br>{{ member.rc_no }}</p>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <p><strong>Company Category:</strong><br>{{ member.company_category }}</p>
+                </div>
+                <div class="col-md-6">
+                  <p><strong>Company Email:</strong><br>{{ member.company_email }}</p>
+                </div>
+              </div>
+              
+              <div class="row">
+                <div class="col-12">
+                  <p><strong>Address:</strong><br>{{ member.address }}</p>
+                </div>
+              </div>
+              
+              <div class="row">
+                <div class="col-md-6">
+                  <p><strong>MD Phone Number:</strong><br>{{ member.md_phone_number }}</p>
+                </div>
+              </div>
+
+              <!-- Membership Information -->
+              <div class="row mb-4 mt-4">
+                <div class="col-12">
+                  <h5 class="text-primary border-bottom pb-2">Membership Information</h5>
+                </div>
+              </div>
+              
+              <div class="row">
+                <div class="col-md-6">
+                  <p><strong>National First Registered:</strong><br>{{ member.national_first_registered|date:"F d, Y" }}</p>
+                </div>
+                <div class="col-md-6">
+                  <p><strong>Enugu First Registered:</strong><br>{{ member.enugu_first_registered|date:"F d, Y" }}</p>
+                </div>
+              </div>
+
+              <!-- Certificate Information -->
+              <!-- Certificate Information Section with Better Colors -->
+<div class="row mb-4 mt-4">
+  <div class="col-12">
+    <h5 class="text-primary border-bottom pb-2">Certificate Information</h5>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-4">
+    <p><strong>Certificate Issued:</strong><br>
+      {% if member.certificate_issued_date %}
+        {{ member.certificate_issued_date|date:"F d, Y" }}
+      {% else %}
+        <span class="text-muted">Not set</span>
+      {% endif %}
+    </p>
+  </div>
+  <div class="col-md-4">
+    <p><strong>Certificate Expiry:</strong><br>
+      {% if member.certificate_expiry_date %}
+        <span class="{% if member.certificate_status == 'expired' or member.certificate_status == 'expiring' %}text-danger font-weight-bold{% endif %}">
+          {{ member.certificate_expiry_date|date:"F d, Y" }}
+        </span>
+      {% else %}
+        <span class="text-muted">Not set</span>
+      {% endif %}
+    </p>
+  </div>
+  <div class="col-md-4">
+    <p><strong>Status:</strong><br>
+      {% if member.certificate_expiry_date %}
+        {% if member.certificate_status == 'expired' %}
+          <span class="badge badge-danger" style="background-color: #dc3545; color: white;">Expired</span>
+        {% elif member.certificate_status == 'expiring' %}
+          <span class="badge badge-warning" style="background-color: #ffc107; color: #212529;">Expiring Soon</span>
+        {% elif member.certificate_status == 'valid' %}
+          <span class="badge badge-success" style="background-color: #28a745; color: white;">Valid</span>
+        {% else %}
+          <span class="badge badge-secondary" style="background-color: #6c757d; color: white;">Unknown</span>
+        {% endif %}
+      {% else %}
+        <span class="badge badge-secondary" style="background-color: #6c757d; color: white;">No Date Set</span>
+      {% endif %}
+    </p>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-12">
+    <p><strong>Days Until Expiry:</strong><br>
+      {% if member.certificate_status == 'expired' %}
+        <span class="text-danger font-weight-bold" style="color: #dc3545 !important;">
+          {{ member.days_until_expiry_display }}
+        </span>
+      {% elif member.certificate_status == 'expiring' %}
+        <span class="text-warning font-weight-bold" style="color: #ffc107 !important;">
+          {{ member.days_until_expiry_display }}
+        </span>
+      {% else %}
+        <span class="text-success" style="color: #28a745 !important;">
+          {{ member.days_until_expiry_display }}
+        </span>
+      {% endif %}
+    </p>
+  </div>
+</div>
+
+
+              <!-- Renewal Information -->
+              <div class="row mb-4 mt-4">
+                <div class="col-12">
+                  <h5 class="text-primary border-bottom pb-2">Renewal Information</h5>
+                </div>
+              </div>
+              
+              <div class="row">
+                <div class="col-md-6">
+                  <p><strong>Last Renewal Date:</strong><br>
+                    {% if member.last_renewal_date %}
+                      {{ member.last_renewal_date|date:"F d, Y" }}
+                    {% else %}
+                      <span class="text-muted">Never renewed</span>
+                    {% endif %}
+                  </p>
+                </div>
+                <div class="col-md-6">
+                  <p><strong>Total Renewals:</strong><br>{{ member.renewal_count }}</p>
+                </div>
+              </div>
+
+              <!-- Certificate Renewal Action -->
+              {% if member.can_renew_certificate %}
+                <div class="row mb-4 mt-4">
+                  <div class="col-12">
+                    <div class="alert alert-warning">
+                      <h6 class="alert-heading">
+                        <i class="fas fa-exclamation-triangle"></i> Certificate Renewal Required
+                      </h6>
+                      <p class="mb-0">
+                        This certificate 
+                        {% if member.certificate_status == 'expired' %}
+                          has expired and needs to be renewed immediately.
+                        {% else %}
+                          is expiring soon and should be renewed.
+                        {% endif %}
+                      </p>
+                      <hr>
+                      <button type="button" class="btn btn-success" onclick="openRenewalModal()">
+                        <i class="fas fa-sync-alt"></i> Renew Certificate
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              {% endif %}
+
+              <!-- Registration Timestamps -->
+              <div class="row mb-4 mt-4">
+                <div class="col-12">
+                  <h5 class="text-primary border-bottom pb-2">System Information</h5>
+                </div>
+              </div>
+              
+              <div class="row">
+                <div class="col-md-6">
+                  <p><strong>Created:</strong><br>{{ member.created_at|date:"F d, Y H:i" }}</p>
+                </div>
+                <div class="col-md-6">
+                  <p><strong>Last Updated:</strong><br>{{ member.updated_at|date:"F d, Y H:i" }}</p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- Images Card -->
+        <div class="col-md-4">
+          <div class="card shadow">
+            <div class="card-header bg-info text-white">
+              <h5 class="mb-0">Documents</h5>
+            </div>
+            <div class="card-body">
+              
+              <!-- MD Picture -->
+              <div class="mb-4">
+                <h6 class="text-info">MD Picture</h6>
+                {% if member.md_picture %}
+                  <img src="{{ member.md_picture.url }}" alt="MD Picture" class="img-fluid rounded" style="max-height: 200px;">
+                  <div class="mt-2">
+                    <a href="{{ member.md_picture.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                      <i class="fas fa-external-link-alt"></i> View Full Size
+                    </a>
+                  </div>
+                {% else %}
+                  <p class="text-muted">No MD picture uploaded</p>
+                {% endif %}
+              </div>
+
+              <!-- Certificate Picture -->
+              <div class="mb-4">
+                <h6 class="text-info">Certificate Picture</h6>
+                {% if member.certificate_picture %}
+                  <img src="{{ member.certificate_picture.url }}" alt="Certificate Picture" class="img-fluid rounded" style="max-height: 200px;">
+                  <div class="mt-2">
+                    <a href="{{ member.certificate_picture.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                      <i class="fas fa-external-link-alt"></i> View Full Size
+                    </a>
+                  </div>
+                {% else %}
+                  <p class="text-muted">No certificate picture uploaded</p>
+                {% endif %}
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Actions Card -->
+          <div class="card shadow mt-3">
+            <div class="card-header bg-secondary text-white">
+              <h5 class="mb-0">Actions</h5>
+            </div>
+            <div class="card-body">
+              <div class="d-grid gap-2">
+                {% if member.can_renew_certificate %}
+                  <button type="button" class="btn btn-success" onclick="openRenewalModal()">
+                    <i class="fas fa-sync-alt"></i> Renew Certificate
+                  </button>
+                {% endif %}
+                <a href="{% url 'edit_member' member.id %}" class="btn btn-warning">
+                  <i class="fas fa-edit"></i> Edit Member
+                </a>
+                <a href="{% url 'delete_member' member.id %}" class="btn btn-danger">
+                  <i class="fas fa-trash"></i> Delete Member
+                </a>
+                <a href="{% url 'members_list' %}" class="btn btn-secondary">
+                  <i class="fas fa-list"></i> All Members
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Renewal Confirmation Modal -->
+<div class="modal fade" id="renewalModal" tabindex="-1" role="dialog" aria-labelledby="renewalModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="renewalModalLabel">
+          <i class="fas fa-sync-alt"></i> Confirm Certificate Renewal
+        </h5>
+        <button type="button" class="close text-white" onclick="closeRenewalModal()" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="text-center mb-3">
+          <i class="fas fa-certificate fa-3x text-success"></i>
+        </div>
+        <h6 class="text-center mb-3">Renew Certificate for {{ member.company_name }}</h6>
+        <div class="row">
+          <div class="col-md-6">
+            <p><strong>Current Expiry:</strong><br>
+              <span class="text-danger">
+                {% if member.certificate_expiry_date %}
+                  {{ member.certificate_expiry_date|date:"F d, Y" }}
+                {% else %}
+                  Not set
+                {% endif %}
+              </span>
+            </p>
+          </div>
+          <div class="col-md-6">
+            <p><strong>New Expiry:</strong><br>
+              <span class="text-success">
+                {% if member.certificate_expiry_date %}
+                  {{ member.new_expiry_date|date:"F d, Y" }}
+                {% else %}
+                  Cannot calculate
+                {% endif %}
+              </span>
+            </p>
+          </div>
+        </div>
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle"></i>
+          <strong>Renewal Details:</strong>
+          <ul class="mb-0 mt-2">
+            <li>Certificate will be extended by <strong>365 days</strong></li>
+            <li>New expiry date will be calculated from current expiry date</li>
+            <li>Renewal count will be incremented</li>
+            <li>Last renewal date will be updated to today</li>
+          </ul>
+        </div>
+        <p class="text-center text-muted">
+          <small>This action will extend the certificate validity by one year from the current expiry date.</small>
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeRenewalModal()">
+          <i class="fas fa-times"></i> Cancel
+        </button>
+        <form method="post" action="{% url 'renew_certificate' member.id %}" style="display: inline;">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-success">
+            <i class="fas fa-check"></i> Confirm Renewal
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal Overlay (Custom Implementation) -->
+<div id="modalOverlay" class="modal-overlay" style="display: none;"></div>
+
+<style>
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1040;
+}
+
+.modal.custom-show {
+    display: block !important;
+}
+
+.modal.custom-show .modal-dialog {
+    transform: translate(0, 0);
+}
+</style>
+
+<script>
+$(document).ready(function() {
+    // Auto-hide alerts after 5 seconds
+    setTimeout(function() {
+        $('.alert').fadeOut('slow');
+    }, 5000);
+});
+
+// Custom modal functions (fallback if Bootstrap modal doesn't work)
+function openRenewalModal() {
+    // Try Bootstrap modal first
+    if (typeof $.fn.modal !== 'undefined') {
+        $('#renewalModal').modal('show');
+    } else {
+        // Custom modal implementation
+        $('#modalOverlay').show();
+        $('#renewalModal').addClass('custom-show');
+        $('body').addClass('modal-open');
+    }
+}
+
+function closeRenewalModal() {
+    // Try Bootstrap modal first
+    if (typeof $.fn.modal !== 'undefined') {
+        $('#renewalModal').modal('hide');
+    } else {
+        // Custom modal implementation
+        $('#modalOverlay').hide();
+        $('#renewalModal').removeClass('custom-show');
+        $('body').removeClass('modal-open');
+    }
+}
+
+// Close modal when clicking overlay
+$(document).on('click', '#modalOverlay', function() {
+    closeRenewalModal();
+});
+
+// Close modal with Escape key
+$(document).keydown(function(e) {
+    if (e.key === "Escape") {
+        closeRenewalModal();
+    }
+});
+</script>
+
+{% endblock %}

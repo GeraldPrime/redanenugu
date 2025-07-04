@@ -1,0 +1,194 @@
+{% extends 'user/base.html' %}
+
+{% block title %}Financial Dashboard{% endblock %}
+{% load humanize %}
+
+{% block content %}
+<div class="content-page">
+  <div class="content">
+    <div class="container-fluid mt-4">
+
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Financial Dashboard</h2>
+      </div>
+
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <!-- Financial Summary Cards -->
+      <div class="row mb-4">
+        <div class="col-md-3">
+          <div class="card bg-success text-white">
+            <div class="card-body">
+              <div class="d-flex justify-content-between">
+                <div>
+                  <h6 class="card-title">Total Income</h6>
+                  <h3 class="mb-0">₦{{ financial_summary.total_income|floatformat:2|intcomma }}</h3>
+                </div>
+                <div class="align-self-center">
+                  <i class="ri-arrow-up-line ri-2x"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card bg-danger text-white">
+            <div class="card-body">
+              <div class="d-flex justify-content-between">
+                <div>
+                  <h6 class="card-title">Total Expenses</h6>
+                  <h3 class="mb-0">₦{{ financial_summary.total_expenses|floatformat:2|intcomma }}</h3>
+                </div>
+                <div class="align-self-center">
+                  <i class="ri-arrow-down-line ri-2x"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card {% if financial_summary.current_balance >= 0 %}bg-primary{% else %}bg-warning{% endif %} text-white">
+            <div class="card-body">
+              <div class="d-flex justify-content-between">
+                <div>
+                  <h6 class="card-title">Current Balance</h6>
+                  <h3 class="mb-0">₦{{ financial_summary.current_balance|floatformat:2|intcomma }}</h3>
+                </div>
+                <div class="align-self-center">
+                  <i class="ri-wallet-line ri-2x"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card bg-info text-white">
+            <div class="card-body">
+              <div class="d-flex justify-content-between">
+                <div>
+                  <h6 class="card-title">Total Transactions</h6>
+                  <h3 class="mb-0">{{ financial_summary.income_count|add:financial_summary.expense_count }}</h3>
+                </div>
+                <div class="align-self-center">
+                  <i class="ri-exchange-line ri-2x"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="row mb-4">
+        <div class="col-md-12">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="card-title">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <a href="{% url 'add_income' %}" class="btn btn-success btn-block mb-2">
+                    <i class="ri-add-line"></i> Add Income
+                  </a>
+                  <a href="{% url 'income_list' %}" class="btn btn-outline-success btn-block">
+                    <i class="ri-list-check"></i> View All Income
+                  </a>
+                </div>
+                <div class="col-md-6">
+                  <a href="{% url 'add_expense' %}" class="btn btn-danger btn-block mb-2">
+                    <i class="ri-subtract-line"></i> Add Expense
+                  </a>
+                  <a href="{% url 'expense_list' %}" class="btn btn-outline-danger btn-block">
+                    <i class="ri-list-check"></i> View All Expenses
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Transactions -->
+      <div class="row">
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="card-title">Recent Income</h5>
+            </div>
+            <div class="card-body">
+              {% if recent_income %}
+                <div class="table-responsive">
+                  <table class="table table-sm">
+                    <thead>
+                      <tr>
+                        <th>Category</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for income in recent_income %}
+                        <tr>
+                          <td>{{ income.get_category_display }}</td>
+                          <td class="text-success">₦{{ income.amount|floatformat:2|intcomma }}</td>
+                          <td>{{ income.date|date:"M d, Y" }}</td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              {% else %}
+                <p class="text-muted">No recent income records.</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="card-title">Recent Expenses</h5>
+            </div>
+            <div class="card-body">
+              {% if recent_expenses %}
+                <div class="table-responsive">
+                  <table class="table table-sm">
+                    <thead>
+                      <tr>
+                        <th>Category</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for expense in recent_expenses %}
+                        <tr>
+                          <td>{{ expense.get_category_display }}</td>
+                          <td class="text-danger">₦{{ expense.amount|floatformat:2|intcomma }}</td>
+                          <td>{{ expense.date|date:"M d, Y" }}</td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              {% else %}
+                <p class="text-muted">No recent expense records.</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

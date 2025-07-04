@@ -1,0 +1,242 @@
+{% extends 'user/base.html' %}
+
+{% block title %}Edit {{ member.company_name }}{% endblock %}
+
+{% block content %}
+<div class="content-page">
+  <div class="content">
+    <div class="container-fluid mt-4">
+
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Edit Member: {{ member.company_name }}</h2>
+        <div>
+          <a href="{% url 'member_detail' member.id %}" class="btn btn-info">
+            <i class="fas fa-eye"></i> View Details
+          </a>
+          <a href="{% url 'members_list' %}" class="btn btn-secondary ml-2">
+            <i class="fas fa-arrow-left"></i> Back to Members
+          </a>
+        </div>
+      </div>
+
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <div class="card shadow">
+        <div class="card-body">
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <!-- Company Information -->
+            <div class="row mb-4">
+              <div class="col-12">
+                <h5 class="text-primary mb-3">Company Information</h5>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="company_name">Company Name <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="company_name" name="company_name" value="{{ member.company_name }}" required>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="company_email">Company Email <span class="text-danger">*</span></label>
+                  <input type="email" class="form-control" id="company_email" name="company_email" value="{{ member.company_email }}" required>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="company_category">Company Category <span class="text-danger">*</span></label>
+                  <select class="form-control" id="company_category" name="company_category" required>
+                    <option value="">Select Category</option>
+                    <option value="building_development" {% if member.company_category == 'building_development' %}selected{% endif %}>Building Development</option>
+                    <option value="site_and_services" {% if member.company_category == 'site_and_services' %}selected{% endif %}>Site and Services</option>
+                    <option value="neighbourhood_estate" {% if member.company_category == 'neighbourhood_estate' %}selected{% endif %}>Neighbourhood Estate</option>
+                    <option value="engineering_construction" {% if member.company_category == 'engineering_construction' %}selected{% endif %}>Engineering/Construction</option>
+                    <option value="surveying" {% if member.company_category == 'surveying' %}selected{% endif %}>Surveying</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="rc_no">RC Number <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="rc_no" name="rc_no" value="{{ member.rc_no }}" required>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="address">Address <span class="text-danger">*</span></label>
+              <textarea class="form-control" id="address" name="address" rows="3" required>{{ member.address }}</textarea>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="md_phone_number">MD Phone Number <span class="text-danger">*</span></label>
+                  <input type="tel" class="form-control" id="md_phone_number" name="md_phone_number" value="{{ member.md_phone_number }}" required>
+                </div>
+              </div>
+            </div>
+
+            <!-- Current Images Display -->
+            <div class="row mb-4">
+              <div class="col-12">
+                <h5 class="text-primary mb-3">Current Documents</h5>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>Current MD Picture:</label>
+                  {% if member.md_picture %}
+                    <div class="mb-2">
+                      <img src="{{ member.md_picture.url }}" alt="Current MD Picture" class="img-thumbnail" style="max-height: 150px;">
+                    </div>
+                  {% else %}
+                    <p class="text-muted">No MD picture currently uploaded</p>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>Current Certificate Picture:</label>
+                  {% if member.certificate_picture %}
+                    <div class="mb-2">
+                      <img src="{{ member.certificate_picture.url }}" alt="Current Certificate Picture" class="img-thumbnail" style="max-height: 150px;">
+                    </div>
+                  {% else %}
+                    <p class="text-muted">No certificate picture currently uploaded</p>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <!-- File Upload Updates -->
+            <div class="row mb-4">
+              <div class="col-12">
+                <h5 class="text-primary mb-3">Update Documents (Optional)</h5>
+                <p class="text-muted">Leave empty to keep current images</p>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="md_picture">New MD Picture</label>
+                  <input type="file" class="form-control-file" id="md_picture" name="md_picture" accept="image/*">
+                  <small class="form-text text-muted">Upload new MD photograph (JPEG, PNG) - Optional</small>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="certificate_picture">New Certificate Picture</label>
+                  <input type="file" class="form-control-file" id="certificate_picture" name="certificate_picture" accept="image/*">
+                  <small class="form-text text-muted">Upload new certificate image (JPEG, PNG) - Optional</small>
+                </div>
+              </div>
+            </div>
+
+            <!-- National Membership -->
+            <div class="row mb-4">
+              <div class="col-12">
+                <h5 class="text-primary mb-3">National Membership</h5>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="national_first_registered">Date of First Year Registered <span class="text-danger">*</span></label>
+                  <input type="date" class="form-control" id="national_first_registered" name="national_first_registered" value="{{ member.national_first_registered|date:'Y-m-d' }}" required>
+                </div>
+              </div>
+            </div>
+
+            <!-- Certificate Information -->
+            <div class="row mb-4">
+              <div class="col-12">
+                <h5 class="text-primary mb-3">Certificate Information</h5>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="certificate_issued_date">Certificate Issued Date <span class="text-danger">*</span></label>
+                  <input type="date" class="form-control" id="certificate_issued_date" name="certificate_issued_date" value="{{ member.certificate_issued_date|date:'Y-m-d' }}" required onchange="updateExpiryDate()">
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="certificate_expiry_display">Certificate Expiry Date</label>
+                  <input type="text" class="form-control" id="certificate_expiry_display" readonly value="{{ member.certificate_expiry_date|date:'F d, Y' }}">
+                  <small class="form-text text-muted">Automatically calculated as 1 year from issued date</small>
+                </div>
+              </div>
+            </div>
+
+            <!-- Enugu Membership -->
+            <div class="row mb-4">
+              <div class="col-12">
+                <h5 class="text-primary mb-3">Enugu Membership</h5>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="enugu_first_registered">Date of First Registration (Enugu) <span class="text-danger">*</span></label>
+                  <input type="date" class="form-control" id="enugu_first_registered" name="enugu_first_registered" value="{{ member.enugu_first_registered|date:'Y-m-d' }}" required>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group mt-4">
+              <button type="submit" class="btn btn-success">
+                <i class="fas fa-save"></i> Update Member
+              </button>
+              <a href="{% url 'member_detail' member.id %}" class="btn btn-info ml-2">
+                <i class="fas fa-eye"></i> View Details
+              </a>
+              <a href="{% url 'members_list' %}" class="btn btn-secondary ml-2">
+                <i class="fas fa-times"></i> Cancel
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  function updateExpiryDate() {
+    const issuedDate = document.getElementById('certificate_issued_date').value;
+    if (issuedDate) {
+      const issued = new Date(issuedDate);
+      const expiry = new Date(issued);
+      expiry.setFullYear(expiry.getFullYear() + 1);
+      
+      const options = { year: 'numeric', month: 'long', day: 'numeric' };
+      document.getElementById('certificate_expiry_display').value = expiry.toLocaleDateString('en-US', options);
+    }
+  }
+</script>
+{% endblock %}

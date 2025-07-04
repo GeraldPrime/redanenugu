@@ -1,0 +1,457 @@
+{% extends 'user/base.html' %} {% block content %}
+
+<!-- ============================================================== -->
+<!-- Start Page Content here -->
+<!-- ============================================================== -->
+
+<div class="content-page">
+  <div class="content">
+    <!-- Start Content-->
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-12">
+          <div class="page-title-box">
+            <h4 class="page-title">Admin Dashboard</h4>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Statistics Cards -->
+      <div class="row">
+        <div class="col-sm-6 col-xxl-3">
+          <div class="card">
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col-8">
+                  <h5 class="text-muted fw-normal mt-0 text-truncate" title="Total Members">
+                    Total Members
+                  </h5>
+                  <h3 class="my-1 py-1 text-truncate">{{ total_members|default:"0"|floatformat:0|add:0 }}</h3>
+                  <p class="mb-0 text-muted">
+                    <span class="text-success me-2">
+                      <i class="ri-arrow-up-line"></i> {{ new_members_this_month|default:"0"|floatformat:0|add:0 }} this month
+                    </span>
+                  </p>
+                </div>
+                <div class="col-4">
+                  <div class="text-end">
+                    <i class="ri-group-line text-primary" style="font-size: 2.5rem;"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-sm-6 col-xxl-3">
+          <div class="card">
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col-8">
+                  <h5 class="text-muted fw-normal mt-0 text-truncate" title="Total Income">
+                    Total Income
+                  </h5>
+                  <h3 class="my-1 py-1 text-truncate">₦{{ total_income|floatformat:2|default:"0.00" }}</h3>
+                  <p class="mb-0 text-muted">
+                    <span class="text-info me-2">
+                      <i class="ri-arrow-up-line"></i> {{ income_count|default:"0"|floatformat:0|add:0 }} transactions
+                    </span>
+                  </p>
+                </div>
+                <div class="col-4">
+                  <div class="text-end">
+                    <i class="ri-money-dollar-circle-line text-success" style="font-size: 2.5rem;"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-sm-6 col-xxl-3">
+          <div class="card">
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col-8">
+                  <h5 class="text-muted fw-normal mt-0 text-truncate" title="Total Expenses">
+                    Total Expenses
+                  </h5>
+                  <h3 class="my-1 py-1 text-truncate">₦{{ total_expenses|floatformat:2|default:"0.00" }}</h3>
+                  <p class="mb-0 text-muted">
+                    <span class="text-warning me-2">
+                      <i class="ri-arrow-down-line"></i> {{ expense_count|default:"0"|floatformat:0|add:0 }} transactions
+                    </span>
+                  </p>
+                </div>
+                <div class="col-4">
+                  <div class="text-end">
+                    <i class="ri-money-dollar-circle-line text-danger" style="font-size: 2.5rem;"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-sm-6 col-xxl-3">
+          <div class="card {% if current_balance >= 0 %}text-bg-success{% else %}text-bg-danger{% endif %} border-primary">
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col-8">
+                  <h5 class="text-white text-opacity-75 fw-normal mt-0 text-truncate" title="Current Balance">
+                    Current Balance
+                  </h5>
+                  <h3 class="my-1 py-1 text-truncate">₦{{ current_balance|floatformat:2|default:"0.00" }}</h3>
+                  <p class="mb-0 text-muted">
+                    <span class="text-white text-opacity-75 me-2">
+                      {% if current_balance >= 0 %}
+                        <i class="ri-arrow-up-line"></i> Positive
+                      {% else %}
+                        <i class="ri-arrow-down-line"></i> Negative
+                      {% endif %}
+                    </span>
+                  </p>
+                </div>
+                <div class="col-4">
+                  <div class="text-end">
+                    <i class="ri-wallet-line text-white" style="font-size: 2.5rem;"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Certificate Status Row -->
+      <div class="row">
+        <div class="col-sm-4">
+          <div class="card">
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col-8">
+                  <h5 class="text-muted fw-normal mt-0 text-truncate">Valid Certificates</h5>
+                  <h3 class="my-1 py-1 text-success text-truncate">{{ valid_certificates|default:"0"|floatformat:0|add:0 }}</h3>
+                </div>
+                <div class="col-4">
+                  <div class="text-end">
+                    <i class="ri-shield-check-line text-success" style="font-size: 2rem;"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-sm-4">
+          <div class="card">
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col-8">
+                  <h5 class="text-muted fw-normal mt-0 text-truncate">Expiring Soon</h5>
+                  <h3 class="my-1 py-1 text-warning text-truncate">{{ expiring_soon_certificates|default:"0"|floatformat:0|add:0 }}</h3>
+                </div>
+                <div class="col-4">
+                  <div class="text-end">
+                    <i class="ri-shield-star-line text-warning" style="font-size: 2rem;"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-sm-4">
+          <div class="card">
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col-8">
+                  <h5 class="text-muted fw-normal mt-0 text-truncate">Expired Certificates</h5>
+                  <h3 class="my-1 py-1 text-danger text-truncate">{{ expired_certificates|default:"0"|floatformat:0|add:0 }}</h3>
+                </div>
+                <div class="col-4">
+                  <div class="text-end">
+                    <i class="ri-shield-cross-line text-danger" style="font-size: 2rem;"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts and Recent Activity -->
+      <div class="row">
+        <!-- Recent Income -->
+        <div class="col-lg-6">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="card-title mb-0">Recent Income</h5>
+            </div>
+            <div class="card-body">
+              {% if recent_income %}
+                {% for income in recent_income %}
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="flex-grow-1 me-2">
+                      <h6 class="mb-1 text-truncate">{{ income.get_category_display }}</h6>
+                      <small class="text-muted">{{ income.date|date:"M d, Y" }}</small>
+                      {% if income.description %}
+                        <p class="mb-0 text-muted small text-truncate">{{ income.description|truncatewords:10 }}</p>
+                      {% endif %}
+                    </div>
+                    <div class="text-end flex-shrink-0">
+                      <span class="badge bg-success">₦{{ income.amount|floatformat:2 }}</span>
+                    </div>
+                  </div>
+                {% endfor %}
+              {% else %}
+                <p class="text-muted text-center">No recent income records</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Expenses -->
+        <div class="col-lg-6">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="card-title mb-0">Recent Expenses</h5>
+            </div>
+            <div class="card-body">
+              {% if recent_expenses %}
+                {% for expense in recent_expenses %}
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="flex-grow-1 me-2">
+                      <h6 class="mb-1 text-truncate">{{ expense.get_category_display }}</h6>
+                      <small class="text-muted">{{ expense.date|date:"M d, Y" }}</small>
+                      {% if expense.description %}
+                        <p class="mb-0 text-muted small text-truncate">{{ expense.description|truncatewords:10 }}</p>
+                      {% endif %}
+                    </div>
+                    <div class="text-end flex-shrink-0">
+                      <span class="badge bg-danger">₦{{ expense.amount|floatformat:2 }}</span>
+                    </div>
+                  </div>
+                {% endfor %}
+              {% else %}
+                <p class="text-muted text-center">No recent expense records</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alerts and Notifications -->
+      {% if members_with_expiring_certificates %}
+      <div class="row">
+        <div class="col-12">
+          <div class="card border-warning">
+            <div class="card-header bg-warning bg-opacity-25">
+              <h5 class="card-title mb-0 text-warning">
+                <i class="ri-alert-line me-2"></i>Certificate Expiration Alerts
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-sm">
+                  <thead>
+                    <tr>
+                      <th>Company Name</th>
+                      <th>RC Number</th>
+                      <th>Expiry Date</th>
+                      <th>Days Remaining</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for member in members_with_expiring_certificates %}
+                    <tr>
+                      <td class="text-truncate" style="max-width: 150px;">{{ member.company_name|default:"N/A" }}</td>
+                      <td>{{ member.rc_no|default:"N/A" }}</td>
+                      <td>{{ member.certificate_expiry_date|date:"M d, Y" }}</td>
+                      <td>
+                        <span class="badge bg-warning">{{ member.days_until_expiry }} days</span>
+                      </td>
+                      <td>
+                        <a href="#" class="btn btn-sm btn-outline-primary">Renew</a>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Quick Stats Summary -->
+      <div class="row">
+        <div class="col-lg-4">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="card-title mb-0">Financial Summary</h5>
+            </div>
+            <div class="card-body">
+              <div class="mb-3">
+                <div class="d-flex justify-content-between">
+                  <span class="text-truncate me-2">Average Monthly Income:</span>
+                  <strong class="text-nowrap">₦{{ average_monthly_income|floatformat:2 }}</strong>
+                </div>
+              </div>
+              <div class="mb-3">
+                <div class="d-flex justify-content-between">
+                  <span class="text-truncate me-2">Average Monthly Expense:</span>
+                  <strong class="text-nowrap">₦{{ average_monthly_expense|floatformat:2 }}</strong>
+                </div>
+              </div>
+              <div class="mb-3">
+                <div class="d-flex justify-content-between">
+                  <span class="text-truncate me-2">Certificate Renewal Rate:</span>
+                  <strong class="text-nowrap">{{ certificate_renewal_rate|floatformat:1 }}%</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-8">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="card-title mb-0">Top Income Categories</h5>
+            </div>
+            <div class="card-body">
+              {% for category, data in income_by_category.items %}
+                <div class="mb-3">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-truncate me-2">{{ category }}</span>
+                    <span class="fw-bold text-nowrap">₦{{ data.amount|floatformat:2 }}</span>
+                  </div>
+                  <div class="progress" style="height: 6px;">
+                    <div class="progress-bar bg-success" style="width: {{ data.percentage|floatformat:1 }}%"></div>
+                  </div>
+                </div>
+              {% empty %}
+                <p class="text-muted text-center">No income data available</p>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <!-- container -->
+  </div>
+  <!-- content -->
+</div>
+
+<!-- Add custom CSS for better number formatting -->
+<style>
+  .text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  .text-nowrap {
+    white-space: nowrap;
+  }
+  
+  .flex-shrink-0 {
+    flex-shrink: 0;
+  }
+  
+  .flex-grow-1 {
+    flex-grow: 1;
+  }
+  
+  /* Responsive font sizes for large numbers */
+  @media (max-width: 576px) {
+    .card-body h3 {
+      font-size: 1.5rem;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .card-body h3 {
+      font-size: 1.75rem;
+    }
+  }
+</style>
+
+<!-- JavaScript for comma formatting -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Function to format numbers with commas
+    function formatNumber(num) {
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+    
+    // Format currency values
+    function formatCurrency(value) {
+        const num = parseFloat(value.replace(/[^\d.-]/g, ''));
+        if (!isNaN(num)) {
+            return formatNumber(num.toFixed(2));
+        }
+        return value;
+    }
+    
+    // Format all h3 elements containing numbers
+    const h3Elements = document.querySelectorAll('h3');
+    h3Elements.forEach(function(element) {
+        const text = element.textContent.trim();
+        
+        // Handle currency values (with ₦ symbol)
+        if (text.includes('₦')) {
+            const value = text.replace('₦', '').trim();
+            const formatted = formatCurrency(value);
+            element.textContent = '₦' + formatted;
+        }
+        // Handle regular numbers
+        else if (/^\d+$/.test(text)) {
+            const formatted = formatNumber(parseInt(text));
+            element.textContent = formatted;
+        }
+    });
+    
+    // Format badge amounts
+    const badges = document.querySelectorAll('.badge');
+    badges.forEach(function(badge) {
+        const text = badge.textContent.trim();
+        if (text.includes('₦')) {
+            const value = text.replace('₦', '').trim();
+            const formatted = formatCurrency(value);
+            badge.textContent = '₦' + formatted;
+        }
+    });
+    
+    // Format financial summary values
+    const summaryElements = document.querySelectorAll('.card-body strong');
+    summaryElements.forEach(function(element) {
+        const text = element.textContent.trim();
+        if (text.includes('₦')) {
+            const value = text.replace('₦', '').trim();
+            const formatted = formatCurrency(value);
+            element.textContent = '₦' + formatted;
+        }
+    });
+    
+    // Format progress bar labels
+    const progressLabels = document.querySelectorAll('.fw-bold');
+    progressLabels.forEach(function(label) {
+        const text = label.textContent.trim();
+        if (text.includes('₦')) {
+            const value = text.replace('₦', '').trim();
+            const formatted = formatCurrency(value);
+            label.textContent = '₦' + formatted;
+        }
+    });
+});
+</script>
+
+<!-- ============================================================== -->
+<!-- End Page content -->
+<!-- ============================================================== -->
+
+{% endblock content %}

@@ -1,0 +1,1184 @@
+from django.shortcuts import render, get_object_or_404, redirect
+from django.http import HttpResponse
+from django.contrib import messages
+from django.core.paginator import Paginator
+from django.db.models import Count, Q, Sum
+from django.http import JsonResponse
+from .models import Income, Expense, CompanyBalance, Member,Gallery, ExecutiveCouncil
+from django.views.decorators.csrf import csrf_exempt
+import json
+from datetime import datetime
+
+from django.utils import timezone
+from datetime import datetime, timedelta
+import os
+
+
+from decimal import Decimal
+
+
+from django.views.decorators.http import require_POST
+
+# views.py
+from django.views.decorators.http import require_http_methods
+from django.core.files.storage import default_storage
+
+
+
+
+
+
+
+# Create your views here.
+
+def home(request):
+    return render(request, "frontend/index.html")
+
+
+def about(request):
+    return render(request, "frontend/about.html")
+
+
+def gallery(request):
+    return render(request, "frontend/gallery.html")
+
+
+def redantv(request):
+    return render(request, "frontend/redanenugutv.html")
+
+
+def downloadables (request):
+    return render(request, "frontend/downloadables.html")
+
+
+def contact(request):
+    return render(request, "frontend/contact.html")
+
+
+def checkmembers(request):
+    return render(request, "frontend/members.html")
+
+
+
+# =======================================================================
+# ======================admin side start ===============================
+
+
+
+
+
+def user(request):
+    # Get current date
+    today = timezone.now().date()
+    
+    # Member Statistics
+    total_members = Member.objects.count()
+    
+    # Certificate Status Statistics
+    expired_certificates = Member.objects.filter(
+        certificate_expiry_date__lt=today
+    ).count()
+    
+    expiring_soon_certificates = Member.objects.filter(
+        certificate_expiry_date__gte=today,
+        certificate_expiry_date__lte=today + timedelta(days=30)
+    ).count()
+    
+    valid_certificates = Member.objects.filter(
+        certificate_expiry_date__gt=today + timedelta(days=30)
+    ).count()
+    
+    # New members this month
+    start_of_month = today.replace(day=1)
+    new_members_this_month = Member.objects.filter(
+        created_at__date__gte=start_of_month
+    ).count()
+    
+    # Financial Summary
+    financial_summary = CompanyBalance.get_financial_summary()
+    
+    # Recent Income (last 5 entries)
+    recent_income = Income.objects.all()[:5]
+    
+    # Recent Expenses (last 5 entries)
+    recent_expenses = Expense.objects.all()[:5]
+    
+    # Income by category (for charts)
+    income_by_category = {}
+    total_income_amount = financial_summary['total_income']
+    for category_code, category_name in Income.INCOME_CATEGORIES:
+        total = Income.objects.filter(category=category_code).aggregate(
+            total=Sum('amount')
+        )['total'] or 0
+        if total > 0:
+            percentage = (total / total_income_amount * 100) if total_income_amount > 0 else 0
+            income_by_category[category_name] = {
+                'amount': total,
+                'percentage': percentage
+            }
+    
+    # Expense by category (for charts)
+    expense_by_category = {}
+    total_expense_amount = financial_summary['total_expenses']
+    for category_code, category_name in Expense.EXPENSE_CATEGORIES:
+        total = Expense.objects.filter(category=category_code).aggregate(
+            total=Sum('amount')
+        )['total'] or 0
+        if total > 0:
+            percentage = (total / total_expense_amount * 100) if total_expense_amount > 0 else 0
+            expense_by_category[category_name] = {
+                'amount': total,
+                'percentage': percentage
+            }
+    
+    # Members with expiring certificates (for alerts)
+    members_with_expiring_certificates = Member.objects.filter(
+        certificate_expiry_date__gte=today,
+        certificate_expiry_date__lte=today + timedelta(days=30)
+    ).order_by('certificate_expiry_date')[:10]
+    
+    # Monthly trends (last 6 months) - FIXED VERSION
+    monthly_income = []
+    monthly_expenses = []
+    
+    # Get the first day of current month
+    current_month = today.replace(day=1)
+    
+    for i in range(6):
+        # Calculate month boundaries properly
+        if i == 0:
+            # Current month
+            month_start = current_month
+            month_end = today
+        else:
+            # Previous months
+            # Go back i months from current month
+            year = current_month.year
+            month = current_month.month - i
+            
+            # Handle year rollover
+            while month <= 0:
+                month += 12
+                year -= 1
+            
+            month_start = current_month.replace(year=year, month=month, day=1)
+            
+            # Get last day of the month
+            if month == 12:
+                next_month = month_start.replace(year=year + 1, month=1, day=1)
+            else:
+                next_month = month_start.replace(month=month + 1, day=1)
+            
+            month_end = next_month - timedelta(days=1)
+        
+        # Calculate totals for this month
+        month_income = Income.objects.filter(
+            date__gte=month_start,
+            date__lte=month_end
+        ).aggregate(total=Sum('amount'))['total'] or 0
+        
+        month_expense = Expense.objects.filter(
+            date__gte=month_start,
+            date__lte=month_end
+        ).aggregate(total=Sum('amount'))['total'] or 0
+        
+        # Insert at beginning to maintain chronological order
+        monthly_income.insert(0, {
+            'month': month_start.strftime('%B %Y'),
+            'amount': month_income
+        })
+        monthly_expenses.insert(0, {
+            'month': month_start.strftime('%B %Y'),
+            'amount': month_expense
+        })
+    
+    # Calculate proper averages - FIXED VERSION
+    # Method 1: Average including months with zero transactions
+    total_monthly_income = sum([item['amount'] for item in monthly_income])
+    total_monthly_expenses = sum([item['amount'] for item in monthly_expenses])
+    average_monthly_income = total_monthly_income / len(monthly_income) if monthly_income else 0
+    average_monthly_expense = total_monthly_expenses / len(monthly_expenses) if monthly_expenses else 0
+    
+    # Method 2: Average excluding months with zero transactions (alternative)
+    # You can use this instead if you prefer to exclude zero months
+    non_zero_income_months = [item['amount'] for item in monthly_income if item['amount'] > 0]
+    non_zero_expense_months = [item['amount'] for item in monthly_expenses if item['amount'] > 0]
+    
+    # Uncomment these lines if you want to exclude zero months from averages
+    # average_monthly_income = sum(non_zero_income_months) / len(non_zero_income_months) if non_zero_income_months else 0
+    # average_monthly_expense = sum(non_zero_expense_months) / len(non_zero_expense_months) if non_zero_expense_months else 0
+    
+    context = {
+        # Member Statistics
+        'total_members': total_members,
+        'new_members_this_month': new_members_this_month,
+        'expired_certificates': expired_certificates,
+        'expiring_soon_certificates': expiring_soon_certificates,
+        'valid_certificates': valid_certificates,
+        
+        # Financial Data
+        'total_income': financial_summary['total_income'],
+        'total_expenses': financial_summary['total_expenses'],
+        'current_balance': financial_summary['current_balance'],
+        'income_count': financial_summary['income_count'],
+        'expense_count': financial_summary['expense_count'],
+        
+        # Recent Transactions
+        'recent_income': recent_income,
+        'recent_expenses': recent_expenses,
+        
+        # Category Breakdowns
+        'income_by_category': income_by_category,
+        'expense_by_category': expense_by_category,
+        
+        # Alerts and Notifications
+        'members_with_expiring_certificates': members_with_expiring_certificates,
+        
+        # Monthly Trends
+        'monthly_income': monthly_income,
+        'monthly_expenses': monthly_expenses,
+        
+        # Calculated Metrics - FIXED
+        'certificate_renewal_rate': (
+            (expired_certificates + expiring_soon_certificates) / total_members * 100
+            if total_members > 0 else 0
+        ),
+        'average_monthly_income': average_monthly_income,
+        'average_monthly_expense': average_monthly_expense,
+        
+        # Additional useful metrics
+        'total_months_analyzed': len(monthly_income),
+        'months_with_income': len(non_zero_income_months),
+        'months_with_expenses': len(non_zero_expense_months),
+    }
+    
+    return render(request, "user/index.html", context)
+
+def members_list(request):
+    """List all members with search and filter functionality"""
+    members = Member.objects.all()
+    
+    # Search functionality
+    search_query = request.GET.get('search', '')
+    if search_query:
+        members = members.filter(
+            Q(company_name__icontains=search_query) |
+            Q(rc_no__icontains=search_query) |
+            Q(address__icontains=search_query) |
+            Q(md_phone_number__icontains=search_query)
+        )
+    
+    # Filter by certificate status
+    status_filter = request.GET.get('status', '')
+    if status_filter == 'expired':
+        members = members.filter(certificate_expiry_date__lt=timezone.now().date())
+    elif status_filter == 'expiring':
+        members = members.filter(
+            certificate_expiry_date__lte=timezone.now().date() + timedelta(days=30),
+            certificate_expiry_date__gte=timezone.now().date()
+        )
+    elif status_filter == 'valid':
+        members = members.filter(certificate_expiry_date__gt=timezone.now().date() + timedelta(days=30))
+    
+    # Pagination
+    paginator = Paginator(members, 10)
+    page_number = request.GET.get('page')
+    members_page = paginator.get_page(page_number)
+    
+    context = {
+        'members': members_page,
+        'search_query': search_query,
+        'status_filter': status_filter,
+    }
+    return render(request, 'user/members_list.html', context)
+
+# def create_member(request):
+#     """Create a new member"""
+#     if request.method == 'POST':
+#         try:
+#             # Get form data
+#             company_name = request.POST.get('company_name')
+#             address = request.POST.get('address')
+#             rc_no = request.POST.get('rc_no')
+#             md_phone_number = request.POST.get('md_phone_number')
+#             national_first_registered = request.POST.get('national_first_registered')
+#             certificate_issued_date = request.POST.get('certificate_issued_date')
+#             enugu_first_registered = request.POST.get('enugu_first_registered')
+            
+#             # Get uploaded files
+#             md_picture = request.FILES.get('md_picture')
+#             certificate_picture = request.FILES.get('certificate_picture')
+            
+#             # Validate required fields
+#             if not all([company_name, address, rc_no, md_phone_number, national_first_registered, 
+#                        certificate_issued_date, enugu_first_registered, md_picture, certificate_picture]):
+#                 messages.error(request, 'All fields are required.')
+#                 return render(request, 'user/create_member.html')
+            
+#             # Check if RC number already exists
+#             if Member.objects.filter(rc_no=rc_no).exists():
+#                 messages.error(request, 'A member with this RC number already exists.')
+#                 return render(request, 'user/create_member.html')
+            
+#             # Create member
+#             member = Member.objects.create(
+#                 company_name=company_name,
+#                 address=address,
+#                 rc_no=rc_no,
+#                 md_phone_number=md_phone_number,
+#                 md_picture=md_picture,
+#                 certificate_picture=certificate_picture,
+#                 national_first_registered=datetime.strptime(national_first_registered, '%Y-%m-%d').date(),
+#                 certificate_issued_date=datetime.strptime(certificate_issued_date, '%Y-%m-%d').date(),
+#                 enugu_first_registered=datetime.strptime(enugu_first_registered, '%Y-%m-%d').date(),
+#             )
+            
+#             messages.success(request, f'Member "{company_name}" created successfully.')
+#             return redirect('member_detail', member_id=member.id)
+            
+#         except Exception as e:
+#             messages.error(request, f'Error creating member: {str(e)}')
+    
+#     return render(request, 'user/create_member.html')
+
+
+def create_member(request):
+    """Create a new member"""
+    if request.method == 'POST':
+        try:
+            # Get form data
+            company_name = request.POST.get('company_name')
+            company_email = request.POST.get('company_email')
+            company_category = request.POST.get('company_category')
+            address = request.POST.get('address')
+            rc_no = request.POST.get('rc_no')
+            md_phone_number = request.POST.get('md_phone_number')
+            national_first_registered = request.POST.get('national_first_registered')
+            certificate_issued_date = request.POST.get('certificate_issued_date')
+            enugu_first_registered = request.POST.get('enugu_first_registered')
+            
+            # Get uploaded files
+            md_picture = request.FILES.get('md_picture')
+            certificate_picture = request.FILES.get('certificate_picture')
+            
+            # Validate required fields
+            if not all([company_name, company_email, company_category, address, rc_no, md_phone_number, 
+                       national_first_registered, certificate_issued_date, enugu_first_registered, 
+                       md_picture, certificate_picture]):
+                messages.error(request, 'All fields are required.')
+                return render(request, 'user/create_member.html')
+            
+            # Check if RC number already exists
+            if Member.objects.filter(rc_no=rc_no).exists():
+                messages.error(request, 'A member with this RC number already exists.')
+                return render(request, 'user/create_member.html')
+            
+            # Check if company email already exists
+            if Member.objects.filter(company_email=company_email).exists():
+                messages.error(request, 'A member with this email address already exists.')
+                return render(request, 'user/create_member.html')
+            
+            # Create member
+            member = Member.objects.create(
+                company_name=company_name,
+                company_email=company_email,
+                company_category=company_category,
+                address=address,
+                rc_no=rc_no,
+                md_phone_number=md_phone_number,
+                md_picture=md_picture,
+                certificate_picture=certificate_picture,
+                national_first_registered=datetime.strptime(national_first_registered, '%Y-%m-%d').date(),
+                certificate_issued_date=datetime.strptime(certificate_issued_date, '%Y-%m-%d').date(),
+                enugu_first_registered=datetime.strptime(enugu_first_registered, '%Y-%m-%d').date(),
+            )
+            
+            messages.success(request, f'Member "{company_name}" created successfully.')
+            return redirect('member_detail', member_id=member.id)
+            
+        except Exception as e:
+            messages.error(request, f'Error creating member: {str(e)}')
+    
+    return render(request, 'user/create_member.html')
+
+
+def member_detail(request, member_id):
+    """View member details"""
+    member = get_object_or_404(Member, id=member_id)
+    context = {
+        'member': member,
+    }
+    return render(request, 'user/member_detail.html', context)
+
+def edit_member(request, member_id):
+    """Edit member information"""
+    member = get_object_or_404(Member, id=member_id)
+    
+    if request.method == 'POST':
+        try:
+            # Get form data
+            company_name = request.POST.get('company_name')
+            company_email = request.POST.get('company_email')
+            company_category = request.POST.get('company_category')
+            address = request.POST.get('address')
+            rc_no = request.POST.get('rc_no')
+            md_phone_number = request.POST.get('md_phone_number')
+            national_first_registered = request.POST.get('national_first_registered')
+            certificate_issued_date = request.POST.get('certificate_issued_date')
+            enugu_first_registered = request.POST.get('enugu_first_registered')
+            
+            # Validate required fields
+            if not all([company_name, company_email, company_category, address, rc_no, 
+                       md_phone_number, national_first_registered, certificate_issued_date, 
+                       enugu_first_registered]):
+                messages.error(request, 'All fields are required.')
+                return render(request, 'user/edit_member.html', {'member': member})
+            
+            # Check if RC number already exists (excluding current member)
+            if Member.objects.filter(rc_no=rc_no).exclude(id=member_id).exists():
+                messages.error(request, 'A member with this RC number already exists.')
+                return render(request, 'user/edit_member.html', {'member': member})
+            
+            # Check if company email already exists (excluding current member)
+            if Member.objects.filter(company_email=company_email).exclude(id=member_id).exists():
+                messages.error(request, 'A member with this email address already exists.')
+                return render(request, 'user/edit_member.html', {'member': member})
+            
+            # Update member data
+            member.company_name = company_name
+            member.company_email = company_email
+            member.company_category = company_category
+            member.address = address
+            member.rc_no = rc_no
+            member.md_phone_number = md_phone_number
+            member.national_first_registered = datetime.strptime(
+                national_first_registered, '%Y-%m-%d'
+            ).date()
+            member.certificate_issued_date = datetime.strptime(
+                certificate_issued_date, '%Y-%m-%d'
+            ).date()
+            member.enugu_first_registered = datetime.strptime(
+                enugu_first_registered, '%Y-%m-%d'
+            ).date()
+            
+            # Update files if provided
+            if request.FILES.get('md_picture'):
+                member.md_picture = request.FILES.get('md_picture')
+            if request.FILES.get('certificate_picture'):
+                member.certificate_picture = request.FILES.get('certificate_picture')
+            
+            # Auto-update certificate expiry date
+            member.certificate_expiry_date = member.certificate_issued_date + timedelta(days=365)
+            
+            member.save()
+            messages.success(request, f'Member "{member.company_name}" updated successfully.')
+            return redirect('member_detail', member_id=member.id)
+            
+        except Exception as e:
+            messages.error(request, f'Error updating member: {str(e)}')
+    
+    context = {
+        'member': member,
+        'today': timezone.now().date()
+    }
+    return render(request, 'user/edit_member.html', context)
+def delete_member(request, member_id):
+    """Delete a member"""
+    member = get_object_or_404(Member, id=member_id)
+    
+    if request.method == 'POST':
+        company_name = member.company_name
+        
+        # Delete associated files
+        if member.md_picture and os.path.exists(member.md_picture.path):
+            os.remove(member.md_picture.path)
+        if member.certificate_picture and os.path.exists(member.certificate_picture.path):
+            os.remove(member.certificate_picture.path)
+        
+        member.delete()
+        messages.success(request, f'Member "{company_name}" deleted successfully.')
+        return redirect('members_list')
+    
+    context = {
+        'member': member,
+    }
+    return render(request, 'user/delete_member.html', context)
+
+@require_POST
+def renew_certificate(request, member_id):
+    """Renew member certificate"""
+    member = get_object_or_404(Member, id=member_id)
+    
+    if not member.can_renew_certificate:
+        messages.error(request, 'Certificate cannot be renewed at this time.')
+        return redirect('member_detail', member_id=member.id)
+    
+    try:
+        if member.renew_certificate():
+            messages.success(request, f'Certificate for "{member.company_name}" has been renewed successfully. New expiry date: {member.certificate_expiry_date.strftime("%B %d, %Y")}')
+        else:
+            messages.error(request, 'Failed to renew certificate. Please contact support.')
+    except Exception as e:
+        messages.error(request, f'Error renewing certificate: {str(e)}')
+    
+    return redirect('member_detail', member_id=member.id)
+
+
+
+# =====================FINANCES==================================
+def financial_dashboard(request):
+    """Dashboard showing financial overview"""
+    financial_summary = CompanyBalance.get_financial_summary()
+    
+    # Recent transactions
+    recent_income = Income.objects.all()[:5]
+    recent_expenses = Expense.objects.all()[:5]
+    
+    context = {
+        'financial_summary': financial_summary,
+        'recent_income': recent_income,
+        'recent_expenses': recent_expenses,
+    }
+    return render(request, 'user/finance_dashboard.html', context)
+
+
+def income_list(request):
+    """List all income records"""
+    search_query = request.GET.get('search', '')
+    category_filter = request.GET.get('category', '')
+    
+    income_records = Income.objects.all()
+    
+    if search_query:
+        income_records = income_records.filter(
+            Q(description__icontains=search_query) |
+            Q(category__icontains=search_query)
+        )
+    
+    if category_filter:
+        income_records = income_records.filter(category=category_filter)
+    
+    paginator = Paginator(income_records, 20)
+    page_number = request.GET.get('page')
+    income_records = paginator.get_page(page_number)
+    
+    context = {
+        'income_records': income_records,
+        'search_query': search_query,
+        'category_filter': category_filter,
+        'income_categories': Income.INCOME_CATEGORIES,
+        'total_income': Income.get_total_income(),
+    }
+    return render(request, 'user/income_list.html', context)
+
+
+def add_income(request):
+    """Add new income record"""
+    if request.method == 'POST':
+        try:
+            category = request.POST.get('category')
+            amount = Decimal(request.POST.get('amount'))
+            date = request.POST.get('date')
+            description = request.POST.get('description', '')
+            
+            # Validate required fields
+            if not category or not amount or not date:
+                messages.error(request, 'Please fill in all required fields.')
+                return render(request, 'user/add_income.html', {'income_categories': Income.INCOME_CATEGORIES})
+            
+            # Create income record
+            Income.objects.create(
+                category=category,
+                amount=amount,
+                date=date,
+                description=description
+            )
+            
+            messages.success(request, f'Income record added successfully. Amount: ₦{amount:,.2f}')
+            return redirect('income_list')
+            
+        except Exception as e:
+            messages.error(request, f'Error adding income: {str(e)}')
+    
+    context = {
+        'income_categories': Income.INCOME_CATEGORIES,
+    }
+    return render(request, 'user/add_income.html', context)
+
+
+def edit_income(request, income_id):
+    """Edit existing income record"""
+    income = get_object_or_404(Income, id=income_id)
+    
+    if request.method == 'POST':
+        try:
+            category = request.POST.get('category')
+            amount = Decimal(request.POST.get('amount'))
+            date = request.POST.get('date')
+            description = request.POST.get('description', '')
+            
+            # Validate required fields
+            if not category or not amount or not date:
+                messages.error(request, 'Please fill in all required fields.')
+                return render(request, 'user/edit_income.html', {
+                    'income': income,
+                    'income_categories': Income.INCOME_CATEGORIES
+                })
+            
+            # Update income record (now including amount)
+            income.category = category
+            income.amount = amount
+            income.date = date
+            income.description = description
+            income.save()
+            
+            messages.success(request, f'Income record updated successfully. New Amount: ₦{amount:,.2f}')
+            return redirect('income_list')
+            
+        except Exception as e:
+            messages.error(request, f'Error updating income: {str(e)}')
+    
+    context = {
+        'income': income,
+        'income_categories': Income.INCOME_CATEGORIES,
+    }
+    return render(request, 'user/edit_income.html', context)
+
+
+def delete_income(request, income_id):
+    """Delete income record"""
+    income = get_object_or_404(Income, id=income_id)
+    
+    if request.method == 'POST':
+        income.delete()
+        messages.success(request, 'Income record deleted successfully.')
+        return redirect('income_list')
+    
+    return render(request, 'user/delete_income.html', {'income': income})
+
+
+def expense_list(request):
+    """List all expense records"""
+    search_query = request.GET.get('search', '')
+    category_filter = request.GET.get('category', '')
+    
+    expense_records = Expense.objects.all()
+    
+    if search_query:
+        expense_records = expense_records.filter(
+            Q(description__icontains=search_query) |
+            Q(category__icontains=search_query)
+        )
+    
+    if category_filter:
+        expense_records = expense_records.filter(category=category_filter)
+    
+    paginator = Paginator(expense_records, 20)
+    page_number = request.GET.get('page')
+    expense_records = paginator.get_page(page_number)
+    
+    context = {
+        'expense_records': expense_records,
+        'search_query': search_query,
+        'category_filter': category_filter,
+        'expense_categories': Expense.EXPENSE_CATEGORIES,
+        'total_expenses': Expense.get_total_expenses(),
+    }
+    return render(request, 'user/expense_list.html', context)
+
+
+def add_expense(request):
+    """Add new expense record"""
+    if request.method == 'POST':
+        try:
+            category = request.POST.get('category')
+            amount = Decimal(request.POST.get('amount'))
+            date = request.POST.get('date')
+            description = request.POST.get('description')
+            
+            # Validate required fields
+            if not category or not amount or not date or not description:
+                messages.error(request, 'Please fill in all required fields.')
+                return render(request, 'user/add_expense.html', {'expense_categories': Expense.EXPENSE_CATEGORIES})
+            
+            # Create expense record
+            Expense.objects.create(
+                category=category,
+                amount=amount,
+                date=date,
+                description=description
+            )
+            
+            messages.success(request, f'Expense record added successfully. Amount: ₦{amount:,.2f}')
+            return redirect('expense_list')
+            
+        except Exception as e:
+            messages.error(request, f'Error adding expense: {str(e)}')
+    
+    context = {
+        'expense_categories': Expense.EXPENSE_CATEGORIES,
+    }
+    return render(request, 'user/add_expense.html', context)
+
+
+def edit_expense(request, expense_id):
+    """Edit existing expense record"""
+    expense = get_object_or_404(Expense, id=expense_id)
+    
+    if request.method == 'POST':
+        try:
+            category = request.POST.get('category')
+            amount = Decimal(request.POST.get('amount'))
+            date = request.POST.get('date')
+            description = request.POST.get('description')
+            
+            # Validate required fields
+            if not category or not amount or not date or not description:
+                messages.error(request, 'Please fill in all required fields.')
+                return render(request, 'user/edit_expense.html', {
+                    'expense': expense,
+                    'expense_categories': Expense.EXPENSE_CATEGORIES
+                })
+            
+            # Update expense record (now including amount)
+            expense.category = category
+            expense.amount = amount
+            expense.date = date
+            expense.description = description
+            expense.save()
+            
+            messages.success(request, f'Expense record updated successfully. New Amount: ₦{amount:,.2f}')
+            return redirect('expense_list')
+            
+        except Exception as e:
+            messages.error(request, f'Error updating expense: {str(e)}')
+    
+    context = {
+        'expense': expense,
+        'expense_categories': Expense.EXPENSE_CATEGORIES,
+    }
+    return render(request, 'user/edit_expense.html', context)
+
+
+def delete_expense(request, expense_id):
+    """Delete expense record"""
+    expense = get_object_or_404(Expense, id=expense_id)
+    
+    if request.method == 'POST':
+        expense.delete()
+        messages.success(request, 'Expense record deleted successfully.')
+        return redirect('expense_list')
+    
+    return render(request, 'user/delete_expense.html', {'expense': expense})
+
+
+# =============================Gallery==========================================
+
+# @login_required
+def gallery_management(request):
+    """View to display all gallery images for management"""
+    gallery_images = Gallery.objects.all().order_by('order', '-created_at')
+    
+    context = {
+        'gallery_images': gallery_images,
+    }
+    return render(request, 'user/gallery_management.html', context)
+
+# @login_required
+def add_gallery_image(request):
+    """View to add a new gallery image"""
+    if request.method == 'POST':
+        title = request.POST.get('title', '').strip()
+        description = request.POST.get('description', '').strip()
+        image = request.FILES.get('image')
+        order = request.POST.get('order', 0)
+        is_active = request.POST.get('is_active') == 'on'
+        
+        # Validation
+        if not image:
+            messages.error(request, 'Please select an image to upload.')
+            return redirect('gallery_management')
+        
+        try:
+            # Create new gallery image
+            gallery_image = Gallery.objects.create(
+                title=title if title else None,
+                description=description if description else None,
+                image=image,
+                order=int(order),
+                is_active=is_active
+            )
+            
+            messages.success(request, 'Gallery image added successfully!')
+            
+        except Exception as e:
+            messages.error(request, f'Error adding gallery image: {str(e)}')
+    
+    return redirect('gallery_management')
+
+# @login_required
+def edit_gallery_image(request):
+    """View to edit an existing gallery image"""
+    if request.method == 'POST':
+        image_id = request.POST.get('image_id')
+        
+        try:
+            gallery_image = get_object_or_404(Gallery, id=image_id)
+            
+            # Update fields
+            title = request.POST.get('title', '').strip()
+            description = request.POST.get('description', '').strip()
+            order = request.POST.get('order', 0)
+            is_active = request.POST.get('is_active') == 'on'
+            new_image = request.FILES.get('image')
+            
+            gallery_image.title = title if title else None
+            gallery_image.description = description if description else None
+            gallery_image.order = int(order)
+            gallery_image.is_active = is_active
+            
+            # Update image if new one is provided
+            if new_image:
+                gallery_image.image = new_image
+            
+            gallery_image.save()
+            
+            messages.success(request, 'Gallery image updated successfully!')
+            
+        except Exception as e:
+            messages.error(request, f'Error updating gallery image: {str(e)}')
+    
+    return redirect('gallery_management')
+
+# @login_required
+def delete_gallery_image(request):
+    """View to delete a gallery image"""
+    if request.method == 'POST':
+        image_id = request.POST.get('image_id')
+        
+        try:
+            gallery_image = get_object_or_404(Gallery, id=image_id)
+            
+            # Delete the image file from storage
+            if gallery_image.image:
+                gallery_image.image.delete(save=False)
+            
+            # Delete the database record
+            gallery_image.delete()
+            
+            messages.success(request, 'Gallery image deleted successfully!')
+            
+        except Exception as e:
+            messages.error(request, f'Error deleting gallery image: {str(e)}')
+    
+    return redirect('gallery_management')
+
+
+
+# =============================Leadership===================================
+
+
+def executive_council_management(request):
+    """Main view for managing executive council members"""
+    executives = ExecutiveCouncil.objects.all()
+    
+    # Group executives by council type for better organization
+    state_executives = executives.filter(council_type='state')
+    zonal_executives = executives.filter(council_type='zonal')
+    national_executives = executives.filter(council_type='national')
+    
+    context = {
+        'executives': executives,
+        'state_executives': state_executives,
+        'zonal_executives': zonal_executives,
+        'national_executives': national_executives,
+        'council_types': ExecutiveCouncil.COUNCIL_TYPES,
+    }
+    
+    return render(request, 'user/executive_council.html', context)
+
+@require_http_methods(["POST"])
+def add_executive(request):
+    """Add a new executive council member"""
+    try:
+        # Get form data
+        name = request.POST.get('name', '').strip()
+        position = request.POST.get('position', '').strip()
+        company_occupation = request.POST.get('company_occupation', '').strip()
+        council_type = request.POST.get('council_type', 'state')
+        order = request.POST.get('order', 0)
+        is_active = request.POST.get('is_active') == 'on'
+        
+        # Social media URLs
+        facebook_url = request.POST.get('facebook_url', '').strip()
+        twitter_url = request.POST.get('twitter_url', '').strip()
+        linkedin_url = request.POST.get('linkedin_url', '').strip()
+        
+        # Validation
+        if not name:
+            messages.error(request, 'Name is required.')
+            return redirect('executive_council_management')
+        
+        if not position:
+            messages.error(request, 'Position is required.')
+            return redirect('executive_council_management')
+        
+        # Create new executive
+        executive = ExecutiveCouncil.objects.create(
+            name=name,
+            position=position,
+            company_occupation=company_occupation,
+            council_type=council_type,
+            order=int(order) if order else 0,
+            is_active=is_active,
+            facebook_url=facebook_url if facebook_url else None,
+            twitter_url=twitter_url if twitter_url else None,
+            linkedin_url=linkedin_url if linkedin_url else None,
+        )
+        
+        # Handle image upload
+        if 'image' in request.FILES:
+            executive.image = request.FILES['image']
+            executive.save()
+        
+        messages.success(request, f'Executive "{name}" added successfully!')
+        
+    except Exception as e:
+        messages.error(request, f'Error adding executive: {str(e)}')
+    
+    return redirect('executive_council_management')
+
+@require_http_methods(["POST"])
+def edit_executive(request):
+    """Edit an existing executive council member"""
+    try:
+        executive_id = request.POST.get('executive_id')
+        executive = ExecutiveCouncil.objects.get(id=executive_id)
+        
+        # Update fields
+        executive.name = request.POST.get('name', '').strip()
+        executive.position = request.POST.get('position', '').strip()
+        executive.company_occupation = request.POST.get('company_occupation', '').strip()
+        executive.council_type = request.POST.get('council_type', 'state')
+        executive.order = int(request.POST.get('order', 0))
+        executive.is_active = request.POST.get('is_active') == 'on'
+        
+        # Update social media URLs
+        executive.facebook_url = request.POST.get('facebook_url', '').strip() or None
+        executive.twitter_url = request.POST.get('twitter_url', '').strip() or None
+        executive.linkedin_url = request.POST.get('linkedin_url', '').strip() or None
+        
+        # Handle image upload
+        if 'image' in request.FILES:
+            # Delete old image if exists
+            if executive.image:
+                default_storage.delete(executive.image.path)
+            executive.image = request.FILES['image']
+        
+        executive.save()
+        messages.success(request, f'Executive "{executive.name}" updated successfully!')
+        
+    except ExecutiveCouncil.DoesNotExist:
+        messages.error(request, 'Executive not found.')
+    except Exception as e:
+        messages.error(request, f'Error updating executive: {str(e)}')
+    
+    return redirect('executive_council_management')
+
+@require_http_methods(["POST"])
+def delete_executive(request):
+    """Delete an executive council member"""
+    try:
+        executive_id = request.POST.get('executive_id')
+        executive = ExecutiveCouncil.objects.get(id=executive_id)
+        
+        # Delete image file if exists
+        if executive.image:
+            default_storage.delete(executive.image.path)
+        
+        executive_name = executive.name
+        executive.delete()
+        
+        messages.success(request, f'Executive "{executive_name}" deleted successfully!')
+        
+    except ExecutiveCouncil.DoesNotExist:
+        messages.error(request, 'Executive not found.')
+    except Exception as e:
+        messages.error(request, f'Error deleting executive: {str(e)}')
+    
+    return redirect('executive_council_management')
+
+@require_http_methods(["GET"])
+def get_executive_data(request, executive_id):
+    """Get executive data for AJAX requests (for modal population)"""
+    try:
+        executive = ExecutiveCouncil.objects.get(id=executive_id)
+        data = {
+            'id': executive.id,
+            'name': executive.name,
+            'position': executive.position,
+            'company_occupation': executive.company_occupation or '',
+            'council_type': executive.council_type,
+            'order': executive.order,
+            'is_active': executive.is_active,
+            'facebook_url': executive.facebook_url or '',
+            'twitter_url': executive.twitter_url or '',
+            'linkedin_url': executive.linkedin_url or '',
+        }
+        return JsonResponse(data)
+    except ExecutiveCouncil.DoesNotExist:
+        return JsonResponse({'error': 'Executive not found'}, status=404)
+    
+    
+# ====================FInancial Report==================================
+from django.shortcuts import render
+from django.db.models import Q, Sum
+from django.utils import timezone
+from datetime import datetime, timedelta
+from .models import Income, Expense, CompanyBalance
+from django.core.paginator import Paginator
+import calendar
+
+
+def financial_report(request):
+    """
+    Generate comprehensive financial report with filtering capabilities
+    """
+    # Get filter parameters
+    transaction_type = request.GET.get('transaction_type', '')
+    category_filter = request.GET.get('category', '')
+    start_date = request.GET.get('start_date', '')
+    end_date = request.GET.get('end_date', '')
+    period = request.GET.get('period', '')
+    search_query = request.GET.get('search', '')
+    
+    # Handle period shortcuts
+    today = timezone.now().date()
+    
+    if period == 'this_month':
+        start_date = today.replace(day=1)
+        end_date = today.replace(day=calendar.monthrange(today.year, today.month)[1])
+    elif period == 'last_month':
+        first_day_last_month = today.replace(day=1) - timedelta(days=1)
+        start_date = first_day_last_month.replace(day=1)
+        end_date = first_day_last_month
+    elif period == 'this_year':
+        start_date = today.replace(month=1, day=1)
+        end_date = today.replace(month=12, day=31)
+    elif period == 'last_year':
+        last_year = today.year - 1
+        start_date = today.replace(year=last_year, month=1, day=1)
+        end_date = today.replace(year=last_year, month=12, day=31)
+    
+    # Convert string dates to date objects
+    if start_date and isinstance(start_date, str):
+        start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+    if end_date and isinstance(end_date, str):
+        end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+    
+    # Get all transactions and combine them
+    income_queryset = Income.objects.all()
+    expense_queryset = Expense.objects.all()
+    
+    # Apply filters
+    if category_filter:
+        income_queryset = income_queryset.filter(category=category_filter)
+        expense_queryset = expense_queryset.filter(category=category_filter)
+    
+    if start_date:
+        income_queryset = income_queryset.filter(date__gte=start_date)
+        expense_queryset = expense_queryset.filter(date__gte=start_date)
+    
+    if end_date:
+        income_queryset = income_queryset.filter(date__lte=end_date)
+        expense_queryset = expense_queryset.filter(date__lte=end_date)
+    
+    if search_query:
+        income_queryset = income_queryset.filter(
+            Q(description__icontains=search_query) | 
+            Q(category__icontains=search_query)
+        )
+        expense_queryset = expense_queryset.filter(
+            Q(description__icontains=search_query) | 
+            Q(category__icontains=search_query)
+        )
+    
+    # Create unified transaction list
+    transactions = []
+    
+    # Add income transactions
+    if transaction_type != 'expense':
+        for income in income_queryset:
+            transactions.append({
+                'date': income.date,
+                'type': 'income',
+                'category': income.category,
+                'category_display': income.get_category_display(),
+                'description': income.description,
+                'amount': income.amount,
+                'created_at': income.created_at,
+            })
+    
+    # Add expense transactions
+    if transaction_type != 'income':
+        for expense in expense_queryset:
+            transactions.append({
+                'date': expense.date,
+                'type': 'expense',
+                'category': expense.category,
+                'category_display': expense.get_category_display(),
+                'description': expense.description,
+                'amount': expense.amount,
+                'created_at': expense.created_at,
+            })
+    
+    # Sort transactions by date (newest first)
+    transactions.sort(key=lambda x: (x['date'], x['created_at']), reverse=True)
+    
+    # Calculate running balance
+    total_income = Income.get_total_income()
+    total_expenses = Expense.get_total_expenses()
+    current_balance = total_income - total_expenses
+    
+    running_balance = current_balance
+    for transaction in transactions:
+        transaction['running_balance'] = running_balance
+        if transaction['type'] == 'income':
+            running_balance -= transaction['amount']
+        else:
+            running_balance += transaction['amount']
+    
+    # Calculate period totals
+    period_income = sum(t['amount'] for t in transactions if t['type'] == 'income')
+    period_expenses = sum(t['amount'] for t in transactions if t['type'] == 'expense')
+    period_net = period_income - period_expenses
+    
+    # Get all categories for filter dropdown
+    income_categories = Income.INCOME_CATEGORIES
+    expense_categories = Expense.EXPENSE_CATEGORIES
+    all_categories = list(income_categories) + list(expense_categories)
+    
+    # Get summary data
+    financial_summary = CompanyBalance.get_financial_summary()
+    
+    context = {
+        'filtered_transactions': transactions,
+        'total_income': total_income,
+        'total_expenses': total_expenses,
+        'net_balance': current_balance,
+        'total_transactions': len(transactions),
+        'period_income': period_income,
+        'period_expenses': period_expenses,
+        'period_net': period_net,
+        'all_categories': all_categories,
+        'transaction_type': transaction_type,
+        'category_filter': category_filter,
+        'start_date': start_date.strftime('%Y-%m-%d') if start_date else '',
+        'end_date': end_date.strftime('%Y-%m-%d') if end_date else '',
+        'period': period,
+        'search_query': search_query,
+        'current_date': timezone.now(),
+        'financial_summary': financial_summary,
+    }
+    
+    return render(request, 'user/financial_report.html', context)

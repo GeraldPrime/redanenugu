@@ -1,0 +1,206 @@
+{% extends 'user/base.html' %}
+
+{% block title %}Add New Member{% endblock %}
+
+{% block content %}
+<div class="content-page">
+  <div class="content">
+    <div class="container-fluid mt-4">
+
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Add New Member</h2>
+        <a href="{% url 'members_list' %}" class="btn btn-secondary">
+          <i class="fas fa-arrow-left"></i> Back to Members
+        </a>
+      </div>
+
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <div class="card shadow">
+        <div class="card-body">
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <!-- Company Information -->
+            <div class="row mb-4">
+              <div class="col-12">
+                <h5 class="text-primary mb-3">Company Information</h5>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="company_name">Company Name <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="company_name" name="company_name" required>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="company_email">Company Email <span class="text-danger">*</span></label>
+                  <input type="email" class="form-control" id="company_email" name="company_email" required>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="company_category">Company Category <span class="text-danger">*</span></label>
+                  <select class="form-control" id="company_category" name="company_category" required>
+                    <option value="">Select Category</option>
+                    <option value="building_development">Building Development</option>
+                    <option value="site_and_services">Site and Services</option>
+                    <option value="neighbourhood_estate">Neighbourhood Estate</option>
+                    <option value="engineering_construction">Engineering/Construction</option>
+                    <option value="surveying">Surveying</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="rc_no">RC Number <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="rc_no" name="rc_no" required>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="address">Address <span class="text-danger">*</span></label>
+              <textarea class="form-control" id="address" name="address" rows="3" required></textarea>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="md_phone_number">MD Phone Number <span class="text-danger">*</span></label>
+                  <input type="tel" class="form-control" id="md_phone_number" name="md_phone_number" required>
+                </div>
+              </div>
+            </div>
+
+            <!-- File Uploads -->
+            <div class="row mb-4">
+              <div class="col-12">
+                <h5 class="text-primary mb-3">Upload Documents</h5>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="md_picture">MD Picture <span class="text-danger">*</span></label>
+                  <input type="file" class="form-control-file" id="md_picture" name="md_picture" accept="image/*" required>
+                  <small class="form-text text-muted">Upload MD's photograph (JPEG, PNG)</small>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="certificate_picture">Certificate Picture <span class="text-danger">*</span></label>
+                  <input type="file" class="form-control-file" id="certificate_picture" name="certificate_picture" accept="image/*" required>
+                  <small class="form-text text-muted">Upload certificate image (JPEG, PNG)</small>
+                </div>
+              </div>
+            </div>
+
+            <!-- National Membership -->
+            <div class="row mb-4">
+              <div class="col-12">
+                <h5 class="text-primary mb-3">National Membership</h5>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="national_first_registered">Date of First Year Registered <span class="text-danger">*</span></label>
+                  <input type="date" class="form-control" id="national_first_registered" name="national_first_registered" required>
+                </div>
+              </div>
+            </div>
+
+            <!-- Certificate Information -->
+            <div class="row mb-4">
+              <div class="col-12">
+                <h5 class="text-primary mb-3">Certificate Information</h5>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="certificate_issued_date">Certificate Issued Date <span class="text-danger">*</span></label>
+                  <input type="date" class="form-control" id="certificate_issued_date" name="certificate_issued_date" required onchange="updateExpiryDate()">
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="certificate_expiry_display">Certificate Expiry Date</label>
+                  <input type="text" class="form-control" id="certificate_expiry_display" readonly placeholder="Will be calculated automatically">
+                  <small class="form-text text-muted">Automatically calculated as 1 year from issued date</small>
+                </div>
+              </div>
+            </div>
+
+            <!-- Enugu Membership -->
+            <div class="row mb-4">
+              <div class="col-12">
+                <h5 class="text-primary mb-3">Enugu Membership</h5>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="enugu_first_registered">Date of First Registration (Enugu) <span class="text-danger">*</span></label>
+                  <input type="date" class="form-control" id="enugu_first_registered" name="enugu_first_registered" required>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group mt-4">
+              <button type="submit" class="btn btn-success">
+                <i class="fas fa-save"></i> Create Member
+              </button>
+              <a href="{% url 'members_list' %}" class="btn btn-secondary ml-2">
+                <i class="fas fa-times"></i> Cancel
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  function updateExpiryDate() {
+    const issuedDate = document.getElementById('certificate_issued_date').value;
+    if (issuedDate) {
+      const issued = new Date(issuedDate);
+      const expiry = new Date(issued);
+      expiry.setFullYear(expiry.getFullYear() + 1);
+      
+      const options = { year: 'numeric', month: 'long', day: 'numeric' };
+      document.getElementById('certificate_expiry_display').value = expiry.toLocaleDateString('en-US', options);
+    }
+  }
+  
+  // Set current date as default for registration dates
+  document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('certificate_issued_date').value = today;
+    updateExpiryDate();
+  });
+</script>
+{% endblock %}

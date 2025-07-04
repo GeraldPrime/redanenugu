@@ -1,0 +1,236 @@
+{% extends 'user/base.html' %}
+
+{% block title %}Members List{% endblock %}
+{% load humanize %}
+
+{% block content %}
+<div class="content-page">
+  <div class="content">
+    <div class="container-fluid mt-4">
+
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Members List</h2>
+        <a href="{% url 'create_member' %}" class="btn btn-success">
+          <i class="ri-add-line"></i> Add New Member
+        </a>
+      </div>
+
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <div class="card shadow">
+        <div class="card-header bg-light">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="input-group">
+                <input type="text" id="memberSearch" class="form-control" placeholder="Search members..." value="{{ search_query }}">
+                <div class="input-group-append">
+                  <button type="button" class="btn btn-primary"><i class="ri-search-line"></i></button>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <select id="statusFilter" class="form-control">
+                <option value="">All Certificate Status</option>
+                <option value="valid" {% if status_filter == 'valid' %}selected{% endif %}>Valid</option>
+                <option value="expiring" {% if status_filter == 'expiring' %}selected{% endif %}>Expiring Soon</option>
+                <option value="expired" {% if status_filter == 'expired' %}selected{% endif %}>Expired</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <button type="button" class="btn btn-outline-secondary" onclick="resetFilters()">
+                <i class="ri-refresh-line"></i> Reset Filters
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="thead-light">
+                <tr>
+                  <th>Company Name</th>
+                  <th>RC Number</th>
+                  <th>MD Phone</th>
+                  <th>Certificate Status</th>
+                  <th>Expiry Date</th>
+                  <th>Days Left</th>
+                  <th>National Reg.</th>
+                  <th>Enugu Reg.</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% if members %}
+                  {% for member in members %}
+                    <tr class="member-row" data-status="{{ member.certificate_status }}" data-company="{{ member.company_name|lower }}" data-rc="{{ member.rc_no|lower }}">
+                      <td><strong>{{ member.company_name }}</strong></td>
+                      <td>{{ member.rc_no }}</td>
+                      <td>{{ member.md_phone_number }}</td>
+                      <td>
+                        {% if member.certificate_status == 'expired' %}
+          <span class="badge badge-danger" style="background-color: #dc3545; color: white;">Expired</span>
+        {% elif member.certificate_status == 'expiring' %}
+          <span class="badge badge-warning" style="background-color: #ffc107; color: #212529;">Expiring Soon</span>
+        {% elif member.certificate_status == 'valid' %}
+          <span class="badge badge-success" style="background-color: #28a745; color: white;">Valid</span>
+        {% else %}
+          <span class="badge badge-secondary" style="background-color: #6c757d; color: white;">Unknown</span>
+        {% endif %}
+                      </td>
+                      <td class="{% if member.is_certificate_expired or member.is_certificate_expiring_soon %}text-danger font-weight-bold{% endif %}">
+                        {% if member.certificate_expiry_date %}
+                          {{ member.certificate_expiry_date|date:"M d, Y" }}
+                        {% else %}
+                          -
+                        {% endif %}
+                      </td>
+                      <td class="{% if member.is_certificate_expired or member.is_certificate_expiring_soon %}text-danger font-weight-bold{% endif %}">
+                        {% if member.days_until_expiry != None %}
+                          {% if member.days_until_expiry < 0 %}
+                            Expired {{ member.days_until_expiry|add:"0"|cut:"-" }} days ago
+                          {% else %}
+                            {{ member.days_until_expiry }} days
+                          {% endif %}
+                        {% else %}
+                          -
+                        {% endif %}
+                      </td>
+                      <td>
+                        {% if member.national_first_registered %}
+                          {{ member.national_first_registered|date:"M d, Y" }}
+                        {% else %}
+                          -
+                        {% endif %}
+                      </td>
+                      <td>
+                        {% if member.enugu_first_registered %}
+                          {{ member.enugu_first_registered|date:"M d, Y" }}
+                        {% else %}
+                          -
+                        {% endif %}
+                      </td>
+                      <td>
+                        <div class="btn-group" role="group">
+                          <a href="{% url 'member_detail' member.id %}" class="btn btn-sm btn-info" title="View Details">
+                            <i class="ri-eye-line"></i>
+                          </a>
+                          <a href="{% url 'edit_member' member.id %}" class="btn btn-sm btn-warning" title="Edit Member">
+                            <i class="ri-edit-line"></i>
+                          </a>
+                          <a href="{% url 'delete_member' member.id %}" class="btn btn-sm btn-danger" title="Delete Member" onclick="return confirm('Are you sure you want to delete this member?')">
+                            <i class="ri-delete-bin-line"></i>
+                          </a>
+                        </div>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr>
+                    <td colspan="9" class="text-center py-4">
+                      No members found. <a href="{% url 'create_member' %}">Add your first member</a>.
+                    </td>
+                  </tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {% if members.has_other_pages %}
+        <div class="card-footer bg-white">
+          <nav aria-label="Members pagination">
+            <ul class="pagination justify-content-center mb-0">
+              {% if members.has_previous %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ members.previous_page_number }}&search={{ search_query }}&status={{ status_filter }}">&laquo;</a>
+                </li>
+              {% endif %}
+              {% for num in members.paginator.page_range %}
+                {% if members.number == num %}
+                  <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% elif num >= members.number|add:-2 and num <= members.number|add:2 %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}&search={{ search_query }}&status={{ status_filter }}">{{ num }}</a>
+                  </li>
+                {% endif %}
+              {% endfor %}
+              {% if members.has_next %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ members.next_page_number }}&search={{ search_query }}&status={{ status_filter }}">&raquo;</a>
+                </li>
+              {% endif %}
+            </ul>
+          </nav>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function filterMembers() {
+  const searchValue = document.getElementById('memberSearch').value.toLowerCase();
+  const statusFilter = document.getElementById('statusFilter').value;
+  
+  document.querySelectorAll('.member-row').forEach(row => {
+    const company = row.dataset.company || '';
+    const rc = row.dataset.rc || '';
+    const status = row.dataset.status;
+    
+    let show = company.includes(searchValue) || rc.includes(searchValue);
+    if (show && statusFilter && status !== statusFilter) show = false;
+    
+    row.style.display = show ? '' : 'none';
+  });
+}
+
+function resetFilters() {
+  document.getElementById('memberSearch').value = '';
+  document.getElementById('statusFilter').value = '';
+  filterMembers();
+}
+
+function applyFilters() {
+  const search = document.getElementById('memberSearch').value;
+  const status = document.getElementById('statusFilter').value;
+  const url = new URL(window.location);
+  
+  if (search) {
+    url.searchParams.set('search', search);
+  } else {
+    url.searchParams.delete('search');
+  }
+  
+  if (status) {
+    url.searchParams.set('status', status);
+  } else {
+    url.searchParams.delete('status');
+  }
+  
+  url.searchParams.delete('page');
+  window.location.href = url.toString();
+}
+
+document.getElementById('memberSearch').addEventListener('keyup', function(e) {
+  if (e.key === 'Enter') {
+    applyFilters();
+  } else {
+    filterMembers();
+  }
+});
+
+document.getElementById('statusFilter').addEventListener('change', applyFilters);
+</script>
+{% endblock %}

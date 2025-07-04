@@ -1,0 +1,346 @@
+{% extends 'user/base.html' %}
+
+{% block content %}
+    <div class="content-page">
+        <div class="content">
+            <!-- Start Content-->
+            <div class="container-fluid">
+                <!-- start page title -->
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="page-title-box">
+                            <div class="page-title-right">
+                                <ol class="breadcrumb m-0">
+                                    <li class="breadcrumb-item"><a href="{% url 'user' %}">Home</a></li>
+                                    <li class="breadcrumb-item active">Executive Council</li>
+                                </ol>
+                            </div>
+                            <h4 class="page-title">Executive Council Management</h4>
+                        </div>
+                    </div>
+                </div>
+                <!-- end page title -->
+
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h4 class="header-title mt-0 mb-0">Executive Council Members</h4>
+                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add-executive-modal">
+                                        <i class="ri-add-line"></i> Add New Member
+                                    </button>
+                                </div>
+
+                                <!-- Filter Tabs -->
+                                <ul class="nav nav-tabs mb-4" id="council-tabs" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all-members" type="button" role="tab">
+                                            All Members ({{ executives.count }})
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="state-tab" data-bs-toggle="tab" data-bs-target="#state-members" type="button" role="tab">
+                                            State Executive ({{ state_executives.count }})
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="zonal-tab" data-bs-toggle="tab" data-bs-target="#zonal-members" type="button" role="tab">
+                                            Zonal Reps ({{ zonal_executives.count }})
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="national-tab" data-bs-toggle="tab" data-bs-target="#national-members" type="button" role="tab">
+                                            National Executive ({{ national_executives.count }})
+                                        </button>
+                                    </li>
+                                </ul>
+
+                                <!-- Tab Content -->
+                                <div class="tab-content" id="council-tab-content">
+                                    <!-- All Members Tab -->
+                                    <div class="tab-pane fade show active" id="all-members" role="tabpanel">
+                                        {% if executives %}
+                                            <div class="row">
+                                                {% for executive in executives %}
+                                                    {% include 'user/partials/executive_card.html' with executive=executive %}
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <div class="alert alert-info">
+                                                <i class="ri-information-line"></i> No executive members found. Click the "Add New Member" button to add your first executive.
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- State Members Tab -->
+                                    <div class="tab-pane fade" id="state-members" role="tabpanel">
+                                        {% if state_executives %}
+                                            <div class="row">
+                                                {% for executive in state_executives %}
+                                                    {% include 'user/partials/executive_card.html' with executive=executive %}
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <div class="alert alert-info">
+                                                <i class="ri-information-line"></i> No state executive members found.
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Zonal Members Tab -->
+                                    <div class="tab-pane fade" id="zonal-members" role="tabpanel">
+                                        {% if zonal_executives %}
+                                            <div class="row">
+                                                {% for executive in zonal_executives %}
+                                                    {% include 'user/partials/executive_card.html' with executive=executive %}
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <div class="alert alert-info">
+                                                <i class="ri-information-line"></i> No zonal representative members found.
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- National Members Tab -->
+                                    <div class="tab-pane fade" id="national-members" role="tabpanel">
+                                        {% if national_executives %}
+                                            <div class="row">
+                                                {% for executive in national_executives %}
+                                                    {% include 'user/partials/executive_card.html' with executive=executive %}
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <div class="alert alert-info">
+                                                <i class="ri-information-line"></i> No national executive members found.
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Executive Modal -->
+    <div class="modal fade" id="add-executive-modal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Executive Member</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{% url 'add_executive' %}" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="name" class="form-label">Full Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="name" name="name" required placeholder="Enter full name">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="position" class="form-label">Position <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="position" name="position" required placeholder="e.g., State Chairman">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="company_occupation" class="form-label">Company/Occupation</label>
+                            <input type="text" class="form-control" id="company_occupation" name="company_occupation" placeholder="Enter company or occupation details">
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="council_type" class="form-label">Council Type <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="council_type" name="council_type" required>
+                                        {% for value, label in council_types %}
+                                            <option value="{{ value }}">{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="order" class="form-label">Display Order</label>
+                                    <input type="number" class="form-control" id="order" name="order" value="0" min="0">
+                                    <small class="text-muted">Lower numbers display first</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="image" class="form-label">Profile Image</label>
+                            <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                            <small class="text-muted">Supported formats: JPG, PNG, GIF, WebP</small>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="facebook_url" class="form-label">Facebook URL</label>
+                                    <input type="url" class="form-control" id="facebook_url" name="facebook_url" placeholder="https://facebook.com/profile">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="twitter_url" class="form-label">Twitter URL</label>
+                                    <input type="url" class="form-control" id="twitter_url" name="twitter_url" placeholder="https://twitter.com/profile">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="linkedin_url" class="form-label">LinkedIn URL</label>
+                                    <input type="url" class="form-control" id="linkedin_url" name="linkedin_url" placeholder="https://linkedin.com/in/profile">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="is_active" name="is_active" checked>
+                                <label class="form-check-label" for="is_active">
+                                    Active (Display on website)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Member</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Executive Modal -->
+    <div class="modal fade" id="edit-executive-modal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Executive Member</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{% url 'edit_executive' %}" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <input type="hidden" name="executive_id" id="edit_executive_id">
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="edit_name" class="form-label">Full Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="edit_name" name="name" required placeholder="Enter full name">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="edit_position" class="form-label">Position <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="edit_position" name="position" required placeholder="e.g., State Chairman">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="edit_company_occupation" class="form-label">Company/Occupation</label>
+                            <input type="text" class="form-control" id="edit_company_occupation" name="company_occupation" placeholder="Enter company or occupation details">
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="edit_council_type" class="form-label">Council Type <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="edit_council_type" name="council_type" required>
+                                        {% for value, label in council_types %}
+                                            <option value="{{ value }}">{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="edit_order" class="form-label">Display Order</label>
+                                    <input type="number" class="form-control" id="edit_order" name="order" min="0">
+                                    <small class="text-muted">Lower numbers display first</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="edit_image" class="form-label">Profile Image</label>
+                            <input type="file" class="form-control" id="edit_image" name="image" accept="image/*">
+                            <small class="text-muted">Leave empty to keep current image</small>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="edit_facebook_url" class="form-label">Facebook URL</label>
+                                    <input type="url" class="form-control" id="edit_facebook_url" name="facebook_url" placeholder="https://facebook.com/profile">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="edit_twitter_url" class="form-label">Twitter URL</label>
+                                    <input type="url" class="form-control" id="edit_twitter_url" name="twitter_url" placeholder="https://twitter.com/profile">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="edit_linkedin_url" class="form-label">LinkedIn URL</label>
+                                    <input type="url" class="form-control" id="edit_linkedin_url" name="linkedin_url" placeholder="https://linkedin.com/in/profile">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="edit_is_active" name="is_active">
+                                <label class="form-check-label" for="edit_is_active">
+                                    Active (Display on website)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update Member</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- JavaScript for modal functionality -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle edit button clicks
+            document.querySelectorAll('.edit-executive-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const executiveId = this.getAttribute('data-id');
+                    
+                    // Populate the edit modal with executive data
+                    document.getElementById('edit_executive_id').value = executiveId;
+                    document.getElementById('edit_name').value = this.getAttribute('data-name');
+                    document.getElementById('edit_position').value = this.getAttribute('data-position');
+                    document.getElementById('edit_company_occupation').value = this.getAttribute('data-company-occupation');
+                    document.getElementById('edit_council_type').value = this.getAttribute('data-council-type');
+                    document.getElementById('edit_order').value = this.getAttribute('data-order');
+                    document.getElementById('edit_facebook_url').value = this.getAttribute('data-facebook-url');
+                    document.getElementById('edit_twitter_url').value = this.getAttribute('data-twitter-url');
+                    document.getElementById('edit_linkedin_url').value = this.getAttribute('data-linkedin-url');
+                    document.getElementById('edit_is_active').checked = this.getAttribute('data-is-active') === 'True';
+                });
+            });
+        });
+    </script>
+{% endblock content %}

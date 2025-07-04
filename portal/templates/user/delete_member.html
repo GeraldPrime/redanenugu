@@ -1,0 +1,168 @@
+{% extends 'user/base.html' %}
+
+{% block title %}Delete {{ member.company_name }}{% endblock %}
+
+{% block content %}
+<div class="content-page">
+  <div class="content">
+    <div class="container-fluid mt-4">
+
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Delete Member</h2>
+        <div>
+          <a href="{% url 'member_detail' member.id %}" class="btn btn-info">
+            <i class="fas fa-eye"></i> View Details
+          </a>
+          <a href="{% url 'members_list' %}" class="btn btn-secondary ml-2">
+            <i class="fas fa-arrow-left"></i> Back to Members
+          </a>
+        </div>
+      </div>
+
+      <div class="card shadow border-danger">
+        <div class="card-header bg-danger text-white">
+          <h4 class="mb-0">
+            <i class="fas fa-exclamation-triangle"></i> Confirm Deletion
+          </h4>
+        </div>
+        <div class="card-body">
+          <div class="alert alert-danger">
+            <h5><i class="fas fa-warning"></i> Warning!</h5>
+            <p>You are about to permanently delete the following member. This action cannot be undone.</p>
+          </div>
+
+          <div class="row">
+            <div class="col-md-8">
+              <!-- Member Information to be Deleted -->
+              <h5 class="text-danger mb-3">Member Information</h5>
+              
+              <div class="row">
+                <div class="col-md-6">
+                  <p><strong>Company Name:</strong><br>{{ member.company_name }}</p>
+                </div>
+                <div class="col-md-6">
+                  <p><strong>RC Number:</strong><br>{{ member.rc_no }}</p>
+                </div>
+              </div>
+              
+              <div class="row">
+                <div class="col-12">
+                  <p><strong>Address:</strong><br>{{ member.address }}</p>
+                </div>
+              </div>
+              
+              <div class="row">
+                <div class="col-md-6">
+                  <p><strong>MD Phone:</strong><br>{{ member.md_phone_number }}</p>
+                </div>
+                <div class="col-md-6">
+                  <p><strong>Certificate Status:</strong><br>
+                    {% if member.certificate_status == 'expired' %}
+                      <span class="badge badge-danger">Expired</span>
+                    {% elif member.certificate_status == 'expiring' %}
+                      <span class="badge badge-warning">Expiring Soon</span>
+                    {% else %}
+                      <span class="badge badge-success">Valid</span>
+                    {% endif %}
+                  </p>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <p><strong>National Registration:</strong><br>{{ member.national_first_registered|date:"F d, Y" }}</p>
+                </div>
+                <div class="col-md-6">
+                  <p><strong>Enugu Registration:</strong><br>{{ member.enugu_first_registered|date:"F d, Y" }}</p>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <p><strong>Certificate Issued:</strong><br>{{ member.certificate_issued_date|date:"F d, Y" }}</p>
+                </div>
+                <div class="col-md-6">
+                  <p><strong>Certificate Expiry:</strong><br>{{ member.certificate_expiry_date|date:"F d, Y" }}</p>
+                </div>
+              </div>
+
+            </div>
+
+            <div class="col-md-4">
+              <!-- Preview Images -->
+              <h6 class="text-danger">Documents to be Deleted</h6>
+              
+              {% if member.md_picture %}
+                <div class="mb-3">
+                  <p><strong>MD Picture:</strong></p>
+                  <img src="{{ member.md_picture.url }}" alt="MD Picture" class="img-thumbnail" style="max-height: 100px;">
+                </div>
+              {% endif %}
+
+              {% if member.certificate_picture %}
+                <div class="mb-3">
+                  <p><strong>Certificate:</strong></p>
+                  <img src="{{ member.certificate_picture.url }}" alt="Certificate Picture" class="img-thumbnail" style="max-height: 100px;">
+                </div>
+              {% endif %}
+            </div>
+          </div>
+
+          <hr class="my-4">
+
+          <div class="alert alert-warning">
+            <h6><i class="fas fa-info-circle"></i> What will be deleted:</h6>
+            <ul class="mb-0">
+              <li>All member information and data</li>
+              <li>Uploaded MD picture</li>
+              <li>Uploaded certificate picture</li>
+              <li>All associated records</li>
+            </ul>
+          </div>
+
+          <form method="post" class="mt-4">
+            {% csrf_token %}
+            <div class="form-group">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="confirm_delete" required>
+                <label class="form-check-label" for="confirm_delete">
+                  I understand that this action cannot be undone and want to permanently delete this member.
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group mt-4">
+              <button type="submit" class="btn btn-danger" id="delete_btn" disabled>
+                <i class="fas fa-trash"></i> Yes, Delete Member Permanently
+              </button>
+              <a href="{% url 'member_detail' member.id %}" class="btn btn-secondary ml-2">
+                <i class="fas fa-times"></i> Cancel
+              </a>
+              <a href="{% url 'members_list' %}" class="btn btn-info ml-2">
+                <i class="fas fa-list"></i> Back to Members List
+              </a>
+            </div>
+          </form>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  // Enable delete button only when checkbox is checked
+  document.getElementById('confirm_delete').addEventListener('change', function() {
+    const deleteBtn = document.getElementById('delete_btn');
+    deleteBtn.disabled = !this.checked;
+  });
+
+  // Add confirmation dialog
+  document.querySelector('form').addEventListener('submit', function(e) {
+    if (!confirm('Are you absolutely sure you want to delete this member? This action cannot be undone!')) {
+      e.preventDefault();
+    }
+  });
+</script>
+{% endblock %}

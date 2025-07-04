@@ -1,0 +1,97 @@
+{% extends 'user/base.html' %}
+
+{% block title %}Add Income{% endblock %}
+
+{% block content %}
+<div class="content-page">
+  <div class="content">
+    <div class="container-fluid mt-4">
+
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Add New Income</h2>
+        <a href="{% url 'income_list' %}" class="btn btn-secondary">
+          <i class="ri-arrow-left-line"></i> Back to Income List
+        </a>
+      </div>
+
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <div class="row justify-content-center">
+        <div class="col-md-8">
+          <div class="card shadow">
+            <div class="card-header bg-success text-white">
+              <h5 class="mb-0"><i class="ri-add-circle-line"></i> Add Income Record</h5>
+            </div>
+            <div class="card-body">
+              <form method="POST">
+                {% csrf_token %}
+                
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="category" class="form-label">Category <span class="text-danger">*</span></label>
+                      <select name="category" id="category" class="form-control" required>
+                        <option value="">Select Category</option>
+                        {% for value, label in income_categories %}
+                          <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="amount" class="form-label">Amount (₦) <span class="text-danger">*</span></label>
+                      <input type="number" name="amount" id="amount" class="form-control" step="0.01" min="0" placeholder="0.00" required>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="date" class="form-label">Date <span class="text-danger">*</span></label>
+                  <input type="date" name="date" id="date" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                  <label for="description" class="form-label">Description</label>
+                  <textarea name="description" id="description" class="form-control" rows="3" placeholder="Enter description (optional)"></textarea>
+                </div>
+
+                <div class="form-group text-right">
+                  <a href="{% url 'income_list' %}" class="btn btn-secondary mr-2">Cancel</a>
+                  <button type="submit" class="btn btn-success">
+                    <i class="ri-save-line"></i> Save Income
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Set today's date as default
+document.getElementById('date').valueAsDate = new Date();
+
+// Format amount input
+document.getElementById('amount').addEventListener('input', function(e) {
+  let value = e.target.value;
+  if (value && !isNaN(value)) {
+    // Add comma separator for display (optional)
+    // e.target.value = parseFloat(value).toLocaleString();
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends 'user/base.html' %}
+{% block title %}Delete Expense{% endblock %}
+{% block content %}
+<div class="content-page">
+  <div class="content">
+    <div class="container-fluid mt-4">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Delete Expense</h2>
+        <a href="{% url 'expense_list' %}" class="btn btn-secondary">
+          <i class="ri-arrow-left-line"></i> Back to Expense List
+        </a>
+      </div>
+      
+      <div class="row justify-content-center">
+        <div class="col-md-8">
+          <div class="card shadow">
+            <div class="card-header bg-danger text-white">
+              <h5 class="mb-0"><i class="ri-delete-bin-line"></i> Delete Expense Record</h5>
+            </div>
+            <div class="card-body">
+              <div class="alert alert-warning" role="alert">
+                <i class="ri-alert-line"></i>
+                <strong>Warning!</strong> Are you sure you want to delete this expense record? This action cannot be undone.
+              </div>
+              
+              <div class="card mb-4">
+                <div class="card-header">
+                  <h6 class="mb-0">Expense Details</h6>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <strong>Category:</strong>
+                      <p class="text-muted">{{ expense.get_category_display }}</p>
+                    </div>
+                    <div class="col-md-6">
+                      <strong>Amount:</strong>
+                      <p class="text-muted">₦{{ expense.amount|floatformat:2 }}</p>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-6">
+                      <strong>Date:</strong>
+                      <p class="text-muted">{{ expense.date|date:"F d, Y" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                      <strong>Created:</strong>
+                      <p class="text-muted">{{ expense.created_at|date:"F d, Y g:i A" }}</p>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-12">
+                      <strong>Description:</strong>
+                      <p class="text-muted">{{ expense.description }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <form method="POST">
+                {% csrf_token %}
+                <div class="form-group text-right">
+                  <a href="{% url 'expense_list' %}" class="btn btn-secondary mr-2">
+                    <i class="ri-arrow-left-line"></i> Cancel
+                  </a>
+                  <button type="submit" class="btn btn-danger">
+                    <i class="ri-delete-bin-line"></i> Yes, Delete Expense
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Add confirmation dialog
+document.addEventListener('DOMContentLoaded', function() {
+  const deleteForm = document.querySelector('form');
+  const deleteButton = document.querySelector('button[type="submit"]');
+  
+  deleteButton.addEventListener('click', function(e) {
+    if (!confirm('Are you absolutely sure you want to delete this expense record? This action cannot be undone.')) {
+      e.preventDefault();
+    }
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,117 @@
+{% extends 'user/base.html' %}
+{% block title %}Edit Income{% endblock %}
+{% load humanize %}
+{% block content %}
+<div class="content-page">
+  <div class="content">
+    <div class="container-fluid mt-4">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Edit Income Record</h2>
+        <a href="{% url 'income_list' %}" class="btn btn-secondary">
+          <i class="ri-arrow-left-line"></i> Back to Income List
+        </a>
+      </div>
+      
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+        {% endfor %}
+      {% endif %}
+      
+      <div class="row justify-content-center">
+        <div class="col-md-8">
+          <div class="card shadow">
+            <div class="card-header bg-warning text-white">
+              <h5 class="mb-0"><i class="ri-edit-line"></i> Edit Income Record</h5>
+            </div>
+            <div class="card-body">
+              <!-- Current Amount Display -->
+              <div class="alert alert-info">
+                <strong>Current Amount:</strong> ₦{{ income.amount|floatformat:2|intcomma }}
+                <small class="text-muted d-block">You can now modify the amount below.</small>
+              </div>
+              
+              <form method="POST">
+                {% csrf_token %}
+               
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="category" class="form-label">Category <span class="text-danger">*</span></label>
+                      <select name="category" id="category" class="form-control" required>
+                        <option value="">Select Category</option>
+                        {% for value, label in income_categories %}
+                          <option value="{{ value }}" {% if income.category == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                  </div>
+                 
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="amount" class="form-label">Amount (₦) <span class="text-danger">*</span></label>
+                      <input type="number" name="amount" id="amount" class="form-control" 
+                             step="0.01" min="0" value="{{ income.amount }}" required>
+                      <small class="text-muted">Enter the new amount</small>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                  <label for="date" class="form-label">Date <span class="text-danger">*</span></label>
+                  <input type="date" name="date" id="date" class="form-control" 
+                         value="{{ income.date|date:'Y-m-d' }}" required>
+                </div>
+                
+                <div class="form-group">
+                  <label for="description" class="form-label">Description</label>
+                  <textarea name="description" id="description" class="form-control" rows="3" 
+                            placeholder="Enter description (optional)">{{ income.description|default:"" }}</textarea>
+                </div>
+                
+                <div class="form-group text-right">
+                  <a href="{% url 'income_list' %}" class="btn btn-secondary mr-2">Cancel</a>
+                  <button type="submit" class="btn btn-warning">
+                    <i class="ri-save-line"></i> Update Income
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Format amount display and validation
+document.addEventListener('DOMContentLoaded', function() {
+  const amountInput = document.getElementById('amount');
+  
+  // Format amount on load
+  if (amountInput.value) {
+    amountInput.value = parseFloat(amountInput.value).toFixed(2);
+  }
+  
+  // Validate amount input
+  amountInput.addEventListener('input', function() {
+    if (this.value < 0) {
+      this.value = 0;
+    }
+  });
+  
+  // Format amount on blur
+  amountInput.addEventListener('blur', function() {
+    if (this.value) {
+      this.value = parseFloat(this.value).toFixed(2);
+    }
+  });
+});
+</script>
+{% endblock %}

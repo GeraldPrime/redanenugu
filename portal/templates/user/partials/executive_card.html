@@ -1,0 +1,89 @@
+<div class="col-xl-3 col-md-6 mb-4">
+    <div class="card h-100 shadow-sm">
+        {% if executive.image %}
+            <div class="bg-light d-flex align-items-center justify-content-center p-2" style="height: 140px;"> {# Added padding and reduced height #}
+                <img src="{{ executive.image.url }}" alt="{{ executive.name }}" 
+                     class="img-fluid" style="max-height: 100%; object-fit: contain;"> {# Changed to img-fluid and object-fit: contain #}
+            </div>
+        {% else %}
+            <div class="bg-light d-flex align-items-center justify-content-center" 
+                 style="height: 140px; width: 100%;"> {# Reduced height for placeholder #}
+                <i class="ri-user-line" style="font-size: 3.5rem; color: #6c757d;"></i> {# Slightly smaller icon #}
+            </div>
+        {% endif %}
+
+        <div class="card-body text-center d-flex flex-column align-items-center py-2"> {# Reduced vertical padding #}
+            <h6 class="card-title mt-2 mb-0 text-truncate w-100">{{ executive.name }}</h6> {# Smaller heading, no bottom margin, truncate long names #}
+            <p class="text-muted small mb-1">{{ executive.position }}</p> {# Smaller text for position #}
+            
+            {% if executive.company_occupation %}
+                <p class="text-muted small text-truncate w-100 mb-2">{{ executive.company_occupation }}</p> {# Truncate long company names #}
+            {% endif %}
+            
+            <div class="d-flex flex-wrap justify-content-center gap-1 mb-2"> {# Use flex-wrap for badges if many #}
+                <span class="badge 
+                    {% if executive.council_type == 'national' %}bg-success
+                    {% elif executive.council_type == 'state' %}bg-primary
+                    {% elif executive.council_type == 'zonal' %}bg-info
+                    {% else %}bg-secondary{% endif %}">
+                    {{ executive.get_council_type_display }}
+                </span>
+                {% if executive.is_active %}
+                    <span class="badge bg-success-subtle text-success">Active</span>
+                {% else %}
+                    <span class="badge bg-danger-subtle text-danger">Inactive</span>
+                {% endif %}
+            </div>
+            
+            {% if executive.facebook_url or executive.twitter_url or executive.linkedin_url %}
+                <div class="d-flex justify-content-center gap-1 mb-2"> {# Reduced gap #}
+                    {% if executive.facebook_url %}
+                        <a href="{{ executive.facebook_url }}" target="_blank" class="btn btn-outline-primary btn-sm p-1"> {# Smaller button with padding #}
+                            <i class="ri-facebook-fill"></i>
+                        </a>
+                    {% endif %}
+                    {% if executive.twitter_url %}
+                        <a href="{{ executive.twitter_url }}" target="_blank" class="btn btn-outline-info btn-sm p-1">
+                            <i class="ri-twitter-fill"></i>
+                        </a>
+                    {% endif %}
+                    {% if executive.linkedin_url %}
+                        <a href="{{ executive.linkedin_url }}" target="_blank" class="btn btn-outline-secondary btn-sm p-1">
+                            <i class="ri-linkedin-fill"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+            
+            <div class="d-flex justify-content-center gap-2 mt-auto">
+                <button type="button" class="btn btn-sm btn-outline-primary edit-executive-btn" 
+                        data-bs-toggle="modal" data-bs-target="#edit-executive-modal"
+                        data-id="{{ executive.id }}"
+                        data-name="{{ executive.name }}"
+                        data-position="{{ executive.position }}"
+                        data-company-occupation="{{ executive.company_occupation|default:'' }}"
+                        data-council-type="{{ executive.council_type }}"
+                        data-order="{{ executive.order }}"
+                        data-facebook-url="{{ executive.facebook_url|default:'' }}"
+                        data-twitter-url="{{ executive.twitter_url|default:'' }}"
+                        data-linkedin-url="{{ executive.linkedin_url|default:'' }}"
+                        data-is-active="{{ executive.is_active }}">
+                    <i class="ri-edit-line"></i> Edit
+                </button>
+                
+                <form method="post" action="{% url 'delete_executive' %}" class="d-inline" 
+                      onsubmit="return confirm('Are you sure you want to delete {{ executive.name }}?')">
+                    {% csrf_token %}
+                    <input type="hidden" name="executive_id" value="{{ executive.id }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                        <i class="ri-delete-bin-line"></i> Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card-footer bg-light text-center py-2"> {# Reduced vertical padding #}
+            <small class="text-muted">Order: {{ executive.order }}</small> {# Shortened text #}
+        </div>
+    </div>
+</div>
