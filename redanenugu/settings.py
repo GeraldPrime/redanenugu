@@ -26,7 +26,11 @@ SECRET_KEY = 'django-insecure-r00ohqs2n!63^(v4@f#&tt03+b^gdbmuzo-^@@9%*elrzmmq--
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    '.onrender.com', 
+    'localhost',                  
+    '127.0.0.1',
+]
 
 
 # Application definition
@@ -71,7 +75,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = '    .wsgi.application'
+WSGI_APPLICATION = 'redanenugu.wsgi.application'
 
 
 # Database
@@ -125,7 +129,7 @@ STATIC_URL = 'static/'
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATICFILES_DIRS = [
-    BASE_DIR / 'estate' / 'static',
+    BASE_DIR / 'portal' / 'static',
 ]
 
 # Default primary key field type
