@@ -29,7 +29,7 @@
       <div class="card shadow">
         <div class="card-header bg-light">
           <div class="row">
-            <div class="col-md-6">
+            <div class="col-md-4">
               <div class="input-group">
                 <input type="text" id="memberSearch" class="form-control" placeholder="Search members..." value="{{ search_query }}">
                 <div class="input-group-append">
@@ -37,12 +37,22 @@
                 </div>
               </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
               <select id="statusFilter" class="form-control">
                 <option value="">All Certificate Status</option>
                 <option value="valid" {% if status_filter == 'valid' %}selected{% endif %}>Valid</option>
                 <option value="expiring" {% if status_filter == 'expiring' %}selected{% endif %}>Expiring Soon</option>
                 <option value="expired" {% if status_filter == 'expired' %}selected{% endif %}>Expired</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <select id="categoryFilter" class="form-control">
+                <option value="">All Categories</option>
+                <option value="building_development" {% if category_filter == 'building_development' %}selected{% endif %}>Building Development</option>
+                <option value="site_and_services" {% if category_filter == 'site_and_services' %}selected{% endif %}>Site and Services</option>
+                <option value="neighbourhood_estate" {% if category_filter == 'neighbourhood_estate' %}selected{% endif %}>Neighbourhood Estate</option>
+                <option value="engineering_construction" {% if category_filter == 'engineering_construction' %}selected{% endif %}>Engineering/Construction</option>
+                <option value="surveying" {% if category_filter == 'surveying' %}selected{% endif %}>Surveying</option>
               </select>
             </div>
             <div class="col-md-3">
@@ -59,6 +69,7 @@
               <thead class="thead-light">
                 <tr>
                   <th>Company Name</th>
+                  <th>Category</th>
                   <th>RC Number</th>
                   <th>MD Phone</th>
                   <th>Certificate Status</th>
@@ -72,8 +83,15 @@
               <tbody>
                 {% if members %}
                   {% for member in members %}
-                    <tr class="member-row" data-status="{{ member.certificate_status }}" data-company="{{ member.company_name|lower }}" data-rc="{{ member.rc_no|lower }}">
+                    <tr class="member-row" data-status="{{ member.certificate_status }}" data-company="{{ member.company_name|lower }}" data-rc="{{ member.rc_no|lower }}" data-category="{{ member.company_category }}">
                       <td><strong>{{ member.company_name }}</strong></td>
+                      <td>
+                        {% if member.company_category %}
+                          {{ member.get_category_display_name }}
+                        {% else %}
+                          -
+                        {% endif %}
+                      </td>
                       <td>{{ member.rc_no }}</td>
                       <td>{{ member.md_phone_number }}</td>
                       <td>
@@ -136,7 +154,7 @@
                   {% endfor %}
                 {% else %}
                   <tr>
-                    <td colspan="9" class="text-center py-4">
+                    <td colspan="10" class="text-center py-4">
                       No members found. <a href="{% url 'create_member' %}">Add your first member</a>.
                     </td>
                   </tr>
@@ -152,7 +170,7 @@
             <ul class="pagination justify-content-center mb-0">
               {% if members.has_previous %}
                 <li class="page-item">
-                  <a class="page-link" href="?page={{ members.previous_page_number }}&search={{ search_query }}&status={{ status_filter }}">&laquo;</a>
+                  <a class="page-link" href="?page={{ members.previous_page_number }}&search={{ search_query }}&status={{ status_filter }}&category={{ category_filter }}">&laquo;</a>
                 </li>
               {% endif %}
               {% for num in members.paginator.page_range %}
@@ -160,13 +178,13 @@
                   <li class="page-item active"><span class="page-link">{{ num }}</span></li>
                 {% elif num >= members.number|add:-2 and num <= members.number|add:2 %}
                   <li class="page-item">
-                    <a class="page-link" href="?page={{ num }}&search={{ search_query }}&status={{ status_filter }}">{{ num }}</a>
+                    <a class="page-link" href="?page={{ num }}&search={{ search_query }}&status={{ status_filter }}&category={{ category_filter }}">{{ num }}</a>
                   </li>
                 {% endif %}
               {% endfor %}
               {% if members.has_next %}
                 <li class="page-item">
-                  <a class="page-link" href="?page={{ members.next_page_number }}&search={{ search_query }}&status={{ status_filter }}">&raquo;</a>
+                  <a class="page-link" href="?page={{ members.next_page_number }}&search={{ search_query }}&status={{ status_filter }}&category={{ category_filter }}">&raquo;</a>
                 </li>
               {% endif %}
             </ul>
@@ -183,14 +201,17 @@
 function filterMembers() {
   const searchValue = document.getElementById('memberSearch').value.toLowerCase();
   const statusFilter = document.getElementById('statusFilter').value;
+  const categoryFilter = document.getElementById('categoryFilter').value;
   
   document.querySelectorAll('.member-row').forEach(row => {
     const company = row.dataset.company || '';
     const rc = row.dataset.rc || '';
     const status = row.dataset.status;
+    const category = row.dataset.category;
     
     let show = company.includes(searchValue) || rc.includes(searchValue);
     if (show && statusFilter && status !== statusFilter) show = false;
+    if (show && categoryFilter && category !== categoryFilter) show = false;
     
     row.style.display = show ? '' : 'none';
   });
@@ -199,12 +220,26 @@ function filterMembers() {
 function resetFilters() {
   document.getElementById('memberSearch').value = '';
   document.getElementById('statusFilter').value = '';
-  filterMembers();
+  document.getElementById('categoryFilter').value = '';
+  
+  // Show all rows
+  document.querySelectorAll('.member-row').forEach(row => {
+    row.style.display = '';
+  });
+  
+  // Also reset the URL parameters
+  const url = new URL(window.location);
+  url.searchParams.delete('search');
+  url.searchParams.delete('status');
+  url.searchParams.delete('category');
+  url.searchParams.delete('page');
+  window.location.href = url.toString();
 }
 
 function applyFilters() {
   const search = document.getElementById('memberSearch').value;
   const status = document.getElementById('statusFilter').value;
+  const category = document.getElementById('categoryFilter').value;
   const url = new URL(window.location);
   
   if (search) {
@@ -217,6 +252,12 @@ function applyFilters() {
     url.searchParams.set('status', status);
   } else {
     url.searchParams.delete('status');
+  }
+  
+  if (category) {
+    url.searchParams.set('category', category);
+  } else {
+    url.searchParams.delete('category');
   }
   
   url.searchParams.delete('page');
@@ -232,5 +273,6 @@ document.getElementById('memberSearch').addEventListener('keyup', function(e) {
 });
 
 document.getElementById('statusFilter').addEventListener('change', applyFilters);
+document.getElementById('categoryFilter').addEventListener('change', applyFilters);
 </script>
 {% endblock %}

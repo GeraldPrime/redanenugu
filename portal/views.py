@@ -313,6 +313,11 @@ def members_list(request):
     elif status_filter == 'valid':
         members = members.filter(certificate_expiry_date__gt=timezone.now().date() + timedelta(days=30))
     
+    # Filter by category
+    category_filter = request.GET.get('category', '')
+    if category_filter:
+        members = members.filter(company_category=category_filter)
+    
     # Pagination
     paginator = Paginator(members, 10)
     page_number = request.GET.get('page')
@@ -322,10 +327,9 @@ def members_list(request):
         'members': members_page,
         'search_query': search_query,
         'status_filter': status_filter,
+        'category_filter': category_filter,
     }
     return render(request, 'user/members_list.html', context)
-
-
 @login_required
 def create_member(request):
     """Create a new member"""
@@ -455,8 +459,8 @@ def edit_member(request, member_id):
             if request.FILES.get('certificate_picture'):
                 member.certificate_picture = request.FILES.get('certificate_picture')
             
-            # Auto-update certificate expiry date
-            member.certificate_expiry_date = member.certificate_issued_date + timedelta(days=365)
+            # REMOVED: Manual certificate expiry date calculation
+            # The model's save method now handles this intelligently
             
             member.save()
             messages.success(request, f'Member "{member.company_name}" updated successfully.')
@@ -470,8 +474,6 @@ def edit_member(request, member_id):
         'today': timezone.now().date()
     }
     return render(request, 'user/edit_member.html', context)
-
-
 @login_required
 def delete_member(request, member_id):
     """Delete a member"""

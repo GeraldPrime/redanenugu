@@ -170,12 +170,33 @@ class Member(models.Model):
             return False
     
     def save(self, *args, **kwargs):
-        # Auto-generate certificate expiry date (1 year from issued date)
-        if self.certificate_issued_date and not self.certificate_expiry_date:
-            self.certificate_expiry_date = self.certificate_issued_date + timedelta(days=365)
+        # Auto-generate certificate expiry date only if:
+        # 1. This is a new instance (no pk), OR
+        # 2. There's a certificate issued date but no expiry date, OR
+        # 3. The certificate issued date has changed from what's in the database
+        if self.certificate_issued_date:
+            should_update_expiry = False
+            
+            if not self.pk:
+                # New instance - always set expiry date
+                should_update_expiry = True
+            elif not self.certificate_expiry_date:
+                # No expiry date exists - set it
+                should_update_expiry = True
+            else:
+                # Check if certificate issued date has changed
+                try:
+                    original = Member.objects.get(pk=self.pk)
+                    if original.certificate_issued_date != self.certificate_issued_date:
+                        should_update_expiry = True
+                except Member.DoesNotExist:
+                    # This shouldn't happen, but if it does, treat as new
+                    should_update_expiry = True
+            
+            if should_update_expiry:
+                self.certificate_expiry_date = self.certificate_issued_date + timedelta(days=365)
+        
         super().save(*args, **kwargs)
-
-
 
 # =======================================finances========================================
 class Income(models.Model):
