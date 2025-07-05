@@ -1,4 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.contrib import messages
 from django.core.paginator import Paginator
@@ -23,7 +26,7 @@ from django.views.decorators.http import require_POST
 from django.views.decorators.http import require_http_methods
 from django.core.files.storage import default_storage
 
-
+import calendar
 
 
 
@@ -63,10 +66,39 @@ def checkmembers(request):
 # =======================================================================
 # ======================admin side start ===============================
 
+def signin(request):
+    if not request.user.is_authenticated and request.GET.get('next'):
+        messages.info(request, "You need to login to access this page.")
+
+    if request.method == 'POST':
+        form = request.POST
+        name_or_email = form.get('name')  # This can be either username or email
+        password = form.get('password')
+        
+        # Check if the input is an email or username
+        user = None
+        if '@' in name_or_email:  # Email login case
+            user = authenticate(request, username=User.objects.filter(email=name_or_email).first().username, password=password)
+        else:  # Username login case
+            user = authenticate(request, username=name_or_email, password=password)
+        
+        if user is not None:
+            login(request, user)
+            messages.success(request, 'Login Successful!')
+            return redirect('user')
+        else:
+            messages.error(request, 'Login Error: Invalid credentials')
+            return redirect('signin')
+
+    return render(request, "user/signin.html")
+
+def signout(request):
+    logout(request)
+    messages.success(request, 'logout successful')
+    return redirect('signin')
 
 
-
-
+@login_required
 def user(request):
     # Get current date
     today = timezone.now().date()
@@ -254,6 +286,7 @@ def user(request):
     
     return render(request, "user/index.html", context)
 
+@login_required
 def members_list(request):
     """List all members with search and filter functionality"""
     members = Member.objects.all()
@@ -292,56 +325,8 @@ def members_list(request):
     }
     return render(request, 'user/members_list.html', context)
 
-# def create_member(request):
-#     """Create a new member"""
-#     if request.method == 'POST':
-#         try:
-#             # Get form data
-#             company_name = request.POST.get('company_name')
-#             address = request.POST.get('address')
-#             rc_no = request.POST.get('rc_no')
-#             md_phone_number = request.POST.get('md_phone_number')
-#             national_first_registered = request.POST.get('national_first_registered')
-#             certificate_issued_date = request.POST.get('certificate_issued_date')
-#             enugu_first_registered = request.POST.get('enugu_first_registered')
-            
-#             # Get uploaded files
-#             md_picture = request.FILES.get('md_picture')
-#             certificate_picture = request.FILES.get('certificate_picture')
-            
-#             # Validate required fields
-#             if not all([company_name, address, rc_no, md_phone_number, national_first_registered, 
-#                        certificate_issued_date, enugu_first_registered, md_picture, certificate_picture]):
-#                 messages.error(request, 'All fields are required.')
-#                 return render(request, 'user/create_member.html')
-            
-#             # Check if RC number already exists
-#             if Member.objects.filter(rc_no=rc_no).exists():
-#                 messages.error(request, 'A member with this RC number already exists.')
-#                 return render(request, 'user/create_member.html')
-            
-#             # Create member
-#             member = Member.objects.create(
-#                 company_name=company_name,
-#                 address=address,
-#                 rc_no=rc_no,
-#                 md_phone_number=md_phone_number,
-#                 md_picture=md_picture,
-#                 certificate_picture=certificate_picture,
-#                 national_first_registered=datetime.strptime(national_first_registered, '%Y-%m-%d').date(),
-#                 certificate_issued_date=datetime.strptime(certificate_issued_date, '%Y-%m-%d').date(),
-#                 enugu_first_registered=datetime.strptime(enugu_first_registered, '%Y-%m-%d').date(),
-#             )
-            
-#             messages.success(request, f'Member "{company_name}" created successfully.')
-#             return redirect('member_detail', member_id=member.id)
-            
-#         except Exception as e:
-#             messages.error(request, f'Error creating member: {str(e)}')
-    
-#     return render(request, 'user/create_member.html')
 
-
+@login_required
 def create_member(request):
     """Create a new member"""
     if request.method == 'POST':
@@ -402,6 +387,7 @@ def create_member(request):
     return render(request, 'user/create_member.html')
 
 
+@login_required
 def member_detail(request, member_id):
     """View member details"""
     member = get_object_or_404(Member, id=member_id)
@@ -410,6 +396,8 @@ def member_detail(request, member_id):
     }
     return render(request, 'user/member_detail.html', context)
 
+
+@login_required
 def edit_member(request, member_id):
     """Edit member information"""
     member = get_object_or_404(Member, id=member_id)
@@ -482,6 +470,9 @@ def edit_member(request, member_id):
         'today': timezone.now().date()
     }
     return render(request, 'user/edit_member.html', context)
+
+
+@login_required
 def delete_member(request, member_id):
     """Delete a member"""
     member = get_object_or_404(Member, id=member_id)
@@ -505,6 +496,7 @@ def delete_member(request, member_id):
     return render(request, 'user/delete_member.html', context)
 
 @require_POST
+@login_required
 def renew_certificate(request, member_id):
     """Renew member certificate"""
     member = get_object_or_404(Member, id=member_id)
@@ -526,6 +518,7 @@ def renew_certificate(request, member_id):
 
 
 # =====================FINANCES==================================
+@login_required
 def financial_dashboard(request):
     """Dashboard showing financial overview"""
     financial_summary = CompanyBalance.get_financial_summary()
@@ -542,6 +535,7 @@ def financial_dashboard(request):
     return render(request, 'user/finance_dashboard.html', context)
 
 
+@login_required
 def income_list(request):
     """List all income records"""
     search_query = request.GET.get('search', '')
@@ -572,6 +566,7 @@ def income_list(request):
     return render(request, 'user/income_list.html', context)
 
 
+@login_required
 def add_income(request):
     """Add new income record"""
     if request.method == 'POST':
@@ -606,6 +601,7 @@ def add_income(request):
     return render(request, 'user/add_income.html', context)
 
 
+@login_required
 def edit_income(request, income_id):
     """Edit existing income record"""
     income = get_object_or_404(Income, id=income_id)
@@ -645,6 +641,7 @@ def edit_income(request, income_id):
     return render(request, 'user/edit_income.html', context)
 
 
+@login_required
 def delete_income(request, income_id):
     """Delete income record"""
     income = get_object_or_404(Income, id=income_id)
@@ -657,6 +654,7 @@ def delete_income(request, income_id):
     return render(request, 'user/delete_income.html', {'income': income})
 
 
+@login_required
 def expense_list(request):
     """List all expense records"""
     search_query = request.GET.get('search', '')
@@ -687,6 +685,7 @@ def expense_list(request):
     return render(request, 'user/expense_list.html', context)
 
 
+@login_required
 def add_expense(request):
     """Add new expense record"""
     if request.method == 'POST':
@@ -721,6 +720,7 @@ def add_expense(request):
     return render(request, 'user/add_expense.html', context)
 
 
+@login_required
 def edit_expense(request, expense_id):
     """Edit existing expense record"""
     expense = get_object_or_404(Expense, id=expense_id)
@@ -760,6 +760,7 @@ def edit_expense(request, expense_id):
     return render(request, 'user/edit_expense.html', context)
 
 
+@login_required
 def delete_expense(request, expense_id):
     """Delete expense record"""
     expense = get_object_or_404(Expense, id=expense_id)
@@ -775,6 +776,7 @@ def delete_expense(request, expense_id):
 # =============================Gallery==========================================
 
 # @login_required
+@login_required
 def gallery_management(request):
     """View to display all gallery images for management"""
     gallery_images = Gallery.objects.all().order_by('order', '-created_at')
@@ -784,7 +786,8 @@ def gallery_management(request):
     }
     return render(request, 'user/gallery_management.html', context)
 
-# @login_required
+
+@login_required
 def add_gallery_image(request):
     """View to add a new gallery image"""
     if request.method == 'POST':
@@ -816,7 +819,8 @@ def add_gallery_image(request):
     
     return redirect('gallery_management')
 
-# @login_required
+
+@login_required
 def edit_gallery_image(request):
     """View to edit an existing gallery image"""
     if request.method == 'POST':
@@ -850,7 +854,8 @@ def edit_gallery_image(request):
     
     return redirect('gallery_management')
 
-# @login_required
+
+@login_required
 def delete_gallery_image(request):
     """View to delete a gallery image"""
     if request.method == 'POST':
@@ -877,7 +882,7 @@ def delete_gallery_image(request):
 
 # =============================Leadership===================================
 
-
+@login_required
 def executive_council_management(request):
     """Main view for managing executive council members"""
     executives = ExecutiveCouncil.objects.all()
@@ -898,6 +903,7 @@ def executive_council_management(request):
     return render(request, 'user/executive_council.html', context)
 
 @require_http_methods(["POST"])
+@login_required
 def add_executive(request):
     """Add a new executive council member"""
     try:
@@ -948,7 +954,9 @@ def add_executive(request):
     
     return redirect('executive_council_management')
 
+
 @require_http_methods(["POST"])
+@login_required
 def edit_executive(request):
     """Edit an existing executive council member"""
     try:
@@ -985,7 +993,9 @@ def edit_executive(request):
     
     return redirect('executive_council_management')
 
+
 @require_http_methods(["POST"])
+@login_required
 def delete_executive(request):
     """Delete an executive council member"""
     try:
@@ -1008,6 +1018,8 @@ def delete_executive(request):
     
     return redirect('executive_council_management')
 
+
+@login_required
 @require_http_methods(["GET"])
 def get_executive_data(request, executive_id):
     """Get executive data for AJAX requests (for modal population)"""
@@ -1031,15 +1043,10 @@ def get_executive_data(request, executive_id):
     
     
 # ====================FInancial Report==================================
-from django.shortcuts import render
-from django.db.models import Q, Sum
-from django.utils import timezone
-from datetime import datetime, timedelta
-from .models import Income, Expense, CompanyBalance
-from django.core.paginator import Paginator
-import calendar
 
 
+
+@login_required
 def financial_report(request):
     """
     Generate comprehensive financial report with filtering capabilities

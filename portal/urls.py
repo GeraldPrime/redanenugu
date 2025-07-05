@@ -18,6 +18,8 @@ urlpatterns = [
     # =======================================================================
 # ======================admin side start ===============================
 
+    path('signin/', views.signin, name='signin'),
+    path('signout/', views.signout, name='signout'),
     path('user/', views.user, name='user'),
 
     # Members CRUD
