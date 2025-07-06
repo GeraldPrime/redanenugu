@@ -364,3 +364,28 @@ class ExecutiveCouncil(models.Model):
             'national': 'National Executive Council'
         }
         return type_mapping.get(self.council_type, self.get_council_type_display())
+    
+    
+class FormUpload(models.Model):
+    """Model for storing uploaded forms that can be downloaded from the frontend"""
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    form_file = models.FileField(upload_to='forms/')
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    @property
+    def file_type(self):
+        """Returns the file extension of the uploaded form"""
+        _, extension = os.path.splitext(self.form_file.name)
+        return extension.upper()[1:] if extension else 'N/A'
+    
+    def __str__(self):
+        return self.name
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Form Upload'
+        verbose_name_plural = 'Form Uploads'
+        
+        

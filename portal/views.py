@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Count, Q, Sum
 from django.http import JsonResponse
-from .models import Income, Expense, CompanyBalance, Member,Gallery, ExecutiveCouncil
+from .models import Income, Expense, CompanyBalance, Member,Gallery, ExecutiveCouncil,FormUpload
 from django.views.decorators.csrf import csrf_exempt
 import json
 from datetime import datetime
@@ -27,6 +27,10 @@ from django.views.decorators.http import require_http_methods
 from django.core.files.storage import default_storage
 
 import calendar
+
+from django.http import HttpResponse, Http404
+import mimetypes
+
 
 
 
@@ -1191,3 +1195,108 @@ def financial_report(request):
     }
     
     return render(request, 'user/financial_report.html', context)
+
+
+
+# =====================FORMS==========================
+@login_required
+def upload_form(request):
+    """View for uploading a new form"""
+    # Get 5 most recent forms for display
+    recent_forms = FormUpload.objects.all().order_by('-created_at')[:5]
+    
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        description = request.POST.get('description')
+        form_file = request.FILES.get('form_file')
+        
+        if not form_file:
+            messages.error(request, "Please select a file to upload.")
+            return redirect('upload_form')
+        
+        # Create new form upload
+        form_upload = FormUpload(
+            name=name,
+            description=description,
+            form_file=form_file
+        )
+        form_upload.save()
+        
+        messages.success(request, f"Form '{name}' has been uploaded successfully!")
+        return redirect('forms_list')
+    
+    return render(request, "user/forms_upload.html", {
+        'recent_forms': recent_forms
+    })
+
+@login_required
+def forms_list(request):
+    """View to display all uploaded forms"""
+    forms = FormUpload.objects.all().order_by('-created_at')
+    
+    return render(request, "user/forms_list.html", {
+        'forms': forms
+    })
+
+@login_required
+def edit_form(request, form_id):
+    """View for editing an existing form"""
+    form = get_object_or_404(FormUpload, id=form_id)
+    
+    if request.method == 'POST':
+        # Extract form data
+        form.name = request.POST.get('name')
+        form.description = request.POST.get('description')
+        
+        # Handle file upload if new file is provided
+        if 'form_file' in request.FILES:
+            form.form_file = request.FILES['form_file']
+            
+        form.save()
+        messages.success(request, f"Form '{form.name}' updated successfully.")
+        return redirect('forms_list')
+    
+    return render(request, 'user/form_edit.html', {'form': form})
+
+@login_required
+def delete_form(request, form_id):
+    """View for deleting a form"""
+    if request.method == 'POST':
+        form = get_object_or_404(FormUpload, id=form_id)
+        form_name = form.name
+        form.delete()
+        messages.success(request, f"Form '{form_name}' has been deleted.")
+    
+    return redirect('forms_list')
+
+
+@login_required
+def download_form(request, form_id):
+    """Download a form file"""
+    form = get_object_or_404(FormUpload, id=form_id)
+    
+    # Check if form has a file and the file exists
+    if form.form_file and form.form_file.name:
+        file_path = form.form_file.path
+        
+        if os.path.exists(file_path):
+            # Get the file's content type
+            content_type, _ = mimetypes.guess_type(file_path)
+            if content_type is None:
+                content_type = 'application/octet-stream'
+            
+            # Read the file
+            with open(file_path, 'rb') as f:
+                response = HttpResponse(f.read(), content_type=content_type)
+                
+                # Get the original filename or use the form name with extension
+                original_filename = os.path.basename(form.form_file.name)
+                if not original_filename:
+                    original_filename = f"{form.name}.{form.file_type.lower()}"
+                
+                response['Content-Disposition'] = f'attachment; filename="{original_filename}"'
+                return response
+        else:
+            raise Http404("File not found on disk")
+    else:
+        raise Http404("No file associated with this form")

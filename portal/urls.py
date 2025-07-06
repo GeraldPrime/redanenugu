@@ -67,6 +67,13 @@ urlpatterns = [
     
     # FInancial report
     path('financial-report/', views.financial_report, name='financial_report'),
+    
+    # Forms
+    path('user/frontend-extras/forms/upload/', views.upload_form, name='upload_form'),
+    path('user/frontend-extras/forms/', views.forms_list, name='forms_list'),
+    path('user/frontend-extras/forms/<int:form_id>/edit/', views.edit_form, name='edit_form'),
+    path('user/frontend-extras/forms/<int:form_id>/delete/', views.delete_form, name='delete_form'),
+    path('forms/download/<int:form_id>/', views.download_form, name='download_form'),
 
     
 
