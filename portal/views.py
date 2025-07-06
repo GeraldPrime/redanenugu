@@ -6,8 +6,9 @@ from django.http import HttpResponse
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Count, Q, Sum
+from django.db.models import Count, Q, Sum
 from django.http import JsonResponse
-from .models import Income, Expense, CompanyBalance, Member,Gallery, ExecutiveCouncil,FormUpload
+from .models import Income, Expense, CompanyBalance, Member,Gallery, ExecutiveCouncil,FormUpload, SecretaryAdmin
 from django.views.decorators.csrf import csrf_exempt
 import json
 from datetime import datetime
@@ -31,6 +32,14 @@ import calendar
 from django.http import HttpResponse, Http404
 import mimetypes
 
+
+
+from django.db import transaction
+import random
+import string
+
+from functools import wraps
+from .helper import admin_required, admin_or_secretary_required, secretary_required
 
 
 
@@ -70,6 +79,35 @@ def checkmembers(request):
 # =======================================================================
 # ======================admin side start ===============================
 
+# def signin(request):
+#     if not request.user.is_authenticated and request.GET.get('next'):
+#         messages.info(request, "You need to login to access this page.")
+
+#     if request.method == 'POST':
+#         form = request.POST
+#         name_or_email = form.get('name')  # This can be either username or email
+#         password = form.get('password')
+        
+#         # Check if the input is an email or username
+#         user = None
+#         if '@' in name_or_email:  # Email login case
+#             user = authenticate(request, username=User.objects.filter(email=name_or_email).first().username, password=password)
+#         else:  # Username login case
+#             user = authenticate(request, username=name_or_email, password=password)
+        
+#         if user is not None:
+#             login(request, user)
+#             messages.success(request, 'Login Successful!')
+#             return redirect('user')
+            
+#         else:
+#             messages.error(request, 'Login Error: Invalid credentials')
+#             return redirect('signin')
+
+#     return render(request, "user/signin.html")
+
+
+
 def signin(request):
     if not request.user.is_authenticated and request.GET.get('next'):
         messages.info(request, "You need to login to access this page.")
@@ -81,15 +119,32 @@ def signin(request):
         
         # Check if the input is an email or username
         user = None
-        if '@' in name_or_email:  # Email login case
-            user = authenticate(request, username=User.objects.filter(email=name_or_email).first().username, password=password)
-        else:  # Username login case
-            user = authenticate(request, username=name_or_email, password=password)
+        try:
+            if '@' in name_or_email:  # Email login case
+                user_obj = User.objects.filter(email=name_or_email).first()
+                if user_obj:
+                    user = authenticate(request, username=user_obj.username, password=password)
+            else:  # Username login case
+                user = authenticate(request, username=name_or_email, password=password)
+        except:
+            user = None
         
         if user is not None:
             login(request, user)
             messages.success(request, 'Login Successful!')
-            return redirect('user')
+            
+            # Check if user is a secretary admin
+            try:
+                secretary = SecretaryAdmin.objects.get(user=user)
+                if secretary.is_active:
+                    return redirect('secretary_dashboard')
+                else:
+                    messages.error(request, 'Your secretary account is currently inactive.')
+                    return redirect('signin')
+            except SecretaryAdmin.DoesNotExist:
+                # Regular admin user
+                return redirect('user')
+            
         else:
             messages.error(request, 'Login Error: Invalid credentials')
             return redirect('signin')
@@ -104,6 +159,14 @@ def signout(request):
 
 @login_required
 def user(request):
+    # Redirect secretaries to their dashboard
+    try:
+        secretary = SecretaryAdmin.objects.get(user=request.user)
+        if secretary.is_active:
+            return redirect('secretary_dashboard')
+    except SecretaryAdmin.DoesNotExist:
+        pass  # Continue with regular admin dashboard
+    
     # Get current date
     today = timezone.now().date()
     
@@ -290,7 +353,9 @@ def user(request):
     
     return render(request, "user/index.html", context)
 
+
 @login_required
+@admin_required
 def members_list(request):
     """List all members with search and filter functionality"""
     members = Member.objects.all()
@@ -334,7 +399,10 @@ def members_list(request):
         'category_filter': category_filter,
     }
     return render(request, 'user/members_list.html', context)
+
+
 @login_required
+@admin_required
 def create_member(request):
     """Create a new member"""
     if request.method == 'POST':
@@ -396,6 +464,7 @@ def create_member(request):
 
 
 @login_required
+@admin_required
 def member_detail(request, member_id):
     """View member details"""
     member = get_object_or_404(Member, id=member_id)
@@ -406,6 +475,7 @@ def member_detail(request, member_id):
 
 
 @login_required
+@admin_required
 def edit_member(request, member_id):
     """Edit member information"""
     member = get_object_or_404(Member, id=member_id)
@@ -478,7 +548,10 @@ def edit_member(request, member_id):
         'today': timezone.now().date()
     }
     return render(request, 'user/edit_member.html', context)
+
+
 @login_required
+@admin_required
 def delete_member(request, member_id):
     """Delete a member"""
     member = get_object_or_404(Member, id=member_id)
@@ -503,6 +576,7 @@ def delete_member(request, member_id):
 
 @require_POST
 @login_required
+@admin_required
 def renew_certificate(request, member_id):
     """Renew member certificate"""
     member = get_object_or_404(Member, id=member_id)
@@ -783,6 +857,7 @@ def delete_expense(request, expense_id):
 
 # @login_required
 @login_required
+@admin_required
 def gallery_management(request):
     """View to display all gallery images for management"""
     gallery_images = Gallery.objects.all().order_by('order', '-created_at')
@@ -794,6 +869,7 @@ def gallery_management(request):
 
 
 @login_required
+@admin_required
 def add_gallery_image(request):
     """View to add a new gallery image"""
     if request.method == 'POST':
@@ -827,6 +903,7 @@ def add_gallery_image(request):
 
 
 @login_required
+@admin_required
 def edit_gallery_image(request):
     """View to edit an existing gallery image"""
     if request.method == 'POST':
@@ -862,6 +939,7 @@ def edit_gallery_image(request):
 
 
 @login_required
+@admin_required
 def delete_gallery_image(request):
     """View to delete a gallery image"""
     if request.method == 'POST':
@@ -889,6 +967,7 @@ def delete_gallery_image(request):
 # =============================Leadership===================================
 
 @login_required
+@admin_required
 def executive_council_management(request):
     """Main view for managing executive council members"""
     executives = ExecutiveCouncil.objects.all()
@@ -910,6 +989,7 @@ def executive_council_management(request):
 
 @require_http_methods(["POST"])
 @login_required
+@admin_required
 def add_executive(request):
     """Add a new executive council member"""
     try:
@@ -963,6 +1043,7 @@ def add_executive(request):
 
 @require_http_methods(["POST"])
 @login_required
+@admin_required
 def edit_executive(request):
     """Edit an existing executive council member"""
     try:
@@ -1002,6 +1083,7 @@ def edit_executive(request):
 
 @require_http_methods(["POST"])
 @login_required
+@admin_required
 def delete_executive(request):
     """Delete an executive council member"""
     try:
@@ -1200,6 +1282,7 @@ def financial_report(request):
 
 # =====================FORMS==========================
 @login_required
+@admin_required
 def upload_form(request):
     """View for uploading a new form"""
     # Get 5 most recent forms for display
@@ -1230,6 +1313,7 @@ def upload_form(request):
     })
 
 @login_required
+@admin_required
 def forms_list(request):
     """View to display all uploaded forms"""
     forms = FormUpload.objects.all().order_by('-created_at')
@@ -1239,6 +1323,7 @@ def forms_list(request):
     })
 
 @login_required
+@admin_required
 def edit_form(request, form_id):
     """View for editing an existing form"""
     form = get_object_or_404(FormUpload, id=form_id)
@@ -1259,6 +1344,7 @@ def edit_form(request, form_id):
     return render(request, 'user/form_edit.html', {'form': form})
 
 @login_required
+@admin_required
 def delete_form(request, form_id):
     """View for deleting a form"""
     if request.method == 'POST':
@@ -1300,3 +1386,226 @@ def download_form(request, form_id):
             raise Http404("File not found on disk")
     else:
         raise Http404("No file associated with this form")
+
+
+
+
+
+
+# ========================SECRETARY ADMIN=================================
+# Add these views to your views.py file
+
+
+@login_required
+@admin_required
+def secretary_list(request):
+    """List all secretary admins"""
+    secretaries = SecretaryAdmin.objects.all().order_by('-created_at')
+    return render(request, 'user/secretary_list.html', {'secretaries': secretaries})
+
+@login_required
+@admin_required
+def create_secretary(request):
+    """Create a new secretary admin"""
+    if request.method == 'POST':
+        full_name = request.POST.get('full_name')
+        email = request.POST.get('email')
+        phone_number = request.POST.get('phone_number')
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        
+        # Validate required fields
+        if not all([full_name, email, username, password]):
+            messages.error(request, 'All required fields must be filled.')
+            return render(request, 'user/create_secretary.html')
+        
+        # Check if username or email already exists
+        if User.objects.filter(username=username).exists():
+            messages.error(request, 'Username already exists.')
+            return render(request, 'user/create_secretary.html')
+        
+        if User.objects.filter(email=email).exists():
+            messages.error(request, 'Email already exists.')
+            return render(request, 'user/create_secretary.html')
+        
+        try:
+            with transaction.atomic():
+                # Create user account
+                user = User.objects.create_user(
+                    username=username,
+                    email=email,
+                    password=password,
+                    first_name=full_name.split()[0],
+                    last_name=' '.join(full_name.split()[1:]) if len(full_name.split()) > 1 else ''
+                )
+                
+                # Create secretary admin profile
+                secretary = SecretaryAdmin.objects.create(
+                    user=user,
+                    full_name=full_name,
+                    email=email,
+                    phone_number=phone_number,
+                    created_by=request.user
+                )
+                
+                messages.success(request, f'Secretary admin "{full_name}" created successfully!')
+                return redirect('secretary_list')
+                
+        except Exception as e:
+            messages.error(request, f'Error creating secretary admin: {str(e)}')
+    
+    return render(request, 'user/create_secretary.html')
+
+@login_required
+@admin_required
+def edit_secretary(request, secretary_id):
+    """Edit secretary admin details"""
+    secretary = get_object_or_404(SecretaryAdmin, id=secretary_id)
+    
+    if request.method == 'POST':
+        full_name = request.POST.get('full_name')
+        email = request.POST.get('email')
+        phone_number = request.POST.get('phone_number')
+        username = request.POST.get('username')
+        is_active = request.POST.get('is_active') == 'on'
+        
+        # Validate required fields
+        if not all([full_name, email, username]):
+            messages.error(request, 'All required fields must be filled.')
+            return render(request, 'user/edit_secretary.html', {'secretary': secretary})
+        
+        # Check if username or email already exists (excluding current user)
+        if User.objects.filter(username=username).exclude(id=secretary.user.id).exists():
+            messages.error(request, 'Username already exists.')
+            return render(request, 'user/edit_secretary.html', {'secretary': secretary})
+        
+        if User.objects.filter(email=email).exclude(id=secretary.user.id).exists():
+            messages.error(request, 'Email already exists.')
+            return render(request, 'user/edit_secretary.html', {'secretary': secretary})
+        
+        try:
+            with transaction.atomic():
+                # Update user account
+                secretary.user.username = username
+                secretary.user.email = email
+                secretary.user.first_name = full_name.split()[0]
+                secretary.user.last_name = ' '.join(full_name.split()[1:]) if len(full_name.split()) > 1 else ''
+                secretary.user.is_active = is_active
+                secretary.user.save()
+                
+                # Update secretary profile
+                secretary.full_name = full_name
+                secretary.email = email
+                secretary.phone_number = phone_number
+                secretary.is_active = is_active
+                secretary.save()
+                
+                messages.success(request, f'Secretary admin "{full_name}" updated successfully!')
+                return redirect('secretary_list')
+                
+        except Exception as e:
+            messages.error(request, f'Error updating secretary admin: {str(e)}')
+    
+    return render(request, 'user/edit_secretary.html', {'secretary': secretary})
+
+@login_required
+@admin_required
+def delete_secretary(request, secretary_id):
+    """Delete secretary admin"""
+    secretary = get_object_or_404(SecretaryAdmin, id=secretary_id)
+    
+    if request.method == 'POST':
+        try:
+            with transaction.atomic():
+                secretary.user.delete()  # This will also delete the secretary profile
+                messages.success(request, f'Secretary admin "{secretary.full_name}" deleted successfully!')
+        except Exception as e:
+            messages.error(request, f'Error deleting secretary admin: {str(e)}')
+    
+    return redirect('secretary_list')
+
+@login_required
+@admin_required
+def toggle_secretary_status(request, secretary_id):
+    """Toggle secretary admin active status"""
+    secretary = get_object_or_404(SecretaryAdmin, id=secretary_id)
+    
+    try:
+        secretary.is_active = not secretary.is_active
+        secretary.user.is_active = secretary.is_active
+        secretary.save()
+        secretary.user.save()
+        
+        status = "activated" if secretary.is_active else "deactivated"
+        messages.success(request, f'Secretary admin "{secretary.full_name}" {status} successfully!')
+    except Exception as e:
+        messages.error(request, f'Error updating secretary status: {str(e)}')
+    
+    return redirect('secretary_list')
+
+def generate_random_password(length=8):
+    """Generate a random password"""
+    characters = string.ascii_letters + string.digits
+    return ''.join(random.choice(characters) for _ in range(length))
+
+@login_required
+@admin_required
+def reset_secretary_password(request, secretary_id):
+    """Reset secretary admin password"""
+    secretary = get_object_or_404(SecretaryAdmin, id=secretary_id)
+    
+    if request.method == 'POST':
+        new_password = request.POST.get('new_password')
+        
+        if not new_password:
+            messages.error(request, 'New password is required.')
+            return redirect('secretary_list')
+        
+        try:
+            secretary.user.set_password(new_password)
+            secretary.user.save()
+            messages.success(request, f'Password reset for "{secretary.full_name}" successfully!')
+        except Exception as e:
+            messages.error(request, f'Error resetting password: {str(e)}')
+    
+    return redirect('secretary_list')
+
+
+
+# ===========================secretary dashboard================================
+@login_required
+def secretary_dashboard(request):
+    """Secretary-specific dashboard with limited access"""
+    try:
+        secretary = SecretaryAdmin.objects.get(user=request.user)
+        if not secretary.is_active:
+            messages.error(request, 'Your secretary account is inactive.')
+            return redirect('signin')
+    except SecretaryAdmin.DoesNotExist:
+        messages.error(request, 'Access denied. You are not a secretary admin.')
+        return redirect('user')
+    
+    # Get statistics for secretary dashboard
+    from django.db.models import Sum
+    
+    total_income = Income.objects.aggregate(total=Sum('amount'))['total'] or 0
+    total_expenses = Expense.objects.aggregate(total=Sum('amount'))['total'] or 0
+    income_count = Income.objects.count()
+    expense_count = Expense.objects.count()
+    
+    # Recent transactions
+    recent_income = Income.objects.all()[:5]
+    recent_expenses = Expense.objects.all()[:5]
+    
+    context = {
+        'total_income': total_income,
+        'total_expenses': total_expenses,
+        'income_count': income_count,
+        'expense_count': expense_count,
+        'recent_income': recent_income,
+        'recent_expenses': recent_expenses,
+        'secretary': secretary,
+    }
+    
+    return render(request, 'user/secretary_dashboard.html', context)
+

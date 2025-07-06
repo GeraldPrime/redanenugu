@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.db.models import Sum
 from datetime import timedelta
 import os
+from django.contrib.auth.models import User
 
 
 def upload_md_picture(instance, filename):
@@ -389,3 +390,21 @@ class FormUpload(models.Model):
         verbose_name_plural = 'Form Uploads'
         
         
+
+class SecretaryAdmin(models.Model):
+    """Model for secretary admin accounts"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    full_name = models.CharField(max_length=255)
+    phone_number = models.CharField(max_length=20, blank=True, null=True)
+    email = models.EmailField()
+    is_active = models.BooleanField(default=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_secretaries')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Secretary Admin'
+        verbose_name_plural = 'Secretary Admins'
+        
+    def __str__(self):
+        return f"{self.full_name} - {self.email}"

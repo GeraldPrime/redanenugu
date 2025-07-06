@@ -4,6 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <title>{% block titile %} {% endblock titile %}</title>
+    {% load user_tags %}
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta content="A fully featured admin theme which can be used to build CRM, CMS, etc." name="description" />
     <meta content="Coderthemes" name="author" />
@@ -194,139 +195,159 @@
                     </a>
                 </div>
 
+               
                 <!--- Sidemenu -->
-                <ul class="side-nav">
+<ul class="side-nav">
+    {% comment %} Check if user is a secretary admin {% endcomment %}
+    {% if request.user|is_secretary %}
+        {% comment %} Secretary Admin Menu {% endcomment %}
+        <li class="side-nav-title">Secretary Dashboard</li>
+        
+        <li class="side-nav-item">
+            <a href="{% url 'secretary_dashboard' %}" class="side-nav-link">
+                <i class="ri-dashboard-3-line"></i>
+                <span>Secretary Dashboard</span>
+            </a>
+        </li>
 
-                    <li class="side-nav-title">Main</li>
+        <li class="side-nav-title">Finances</li>
 
-                    <li class="side-nav-item">
-                        <a href="{% url 'user' %}" class="side-nav-link">
-                            <i class="ri-dashboard-3-line"></i>
-                            <span>Admin Dashboard </span>
-                        </a>
-                    </li>
+        <li class="side-nav-item">
+            <a href="{% url 'financial_dashboard' %}" class="side-nav-link">
+                <i class="ri-dashboard-line"></i>
+                <span>Finance Dashboard</span>
+            </a>
+        </li>
+        
+        <li class="side-nav-item">
+            <a href="{% url 'income_list' %}" class="side-nav-link">
+                <i class="ri-currency-line"></i>
+                <span>Income</span>
+            </a>
+        </li>
 
-                    <li class="side-nav-item">
-                        <a href="{% url 'home' %}" class="side-nav-link">
-                            <i class="ri-global-line"></i>
-                            <span> Go To Website </span>
-                        </a>
-                    </li>
+        <li class="side-nav-item">
+            <a href="{% url 'expense_list' %}" class="side-nav-link">
+                <i class="ri-shopping-cart-line"></i>
+                <span>Expenditure</span>
+            </a>
+        </li>
+        
+        <li class="side-nav-item">
+            <a href="{% url 'financial_report' %}" class="side-nav-link">
+                <i class="ri-file-chart-line"></i>
+                <span>Financial Report</span>
+            </a>
+        </li>
 
-                    <li class="side-nav-item">
-                        <a href="{% url 'members_list' %}" class="side-nav-link">
-                            <i class="ri-vip-crown-line"></i>
-                            <span> Membership </span>
-                        </a>
-                    </li>
+        <li class="side-nav-title">Account</li>
+        
+        <li class="side-nav-item">
+            <a href="{% url 'signout' %}" class="side-nav-link">
+                <i class="ri-logout-box-r-line"></i>
+                <span>Logout</span>
+            </a>
+        </li>
 
-                    
+    {% else %}
+        {% comment %} Main Admin Menu {% endcomment %}
+        <li class="side-nav-title">Main</li>
 
-                    <li class="side-nav-title">Finances</li>
+        <li class="side-nav-item">
+            <a href="{% url 'user' %}" class="side-nav-link">
+                <i class="ri-dashboard-3-line"></i>
+                <span>Admin Dashboard</span>
+            </a>
+        </li>
 
-                   <li class="side-nav-item">
-                        <a href="{% url 'financial_dashboard' %}" class="side-nav-link">
-                            <i class="ri-dashboard-line"></i> {# Option 1: Classic dashboard icon #}
-                            {# <i class="ri-dashboard-2-line"></i> Option 2: Another dashboard style #}
-                            {# <i class="ri-home-line"></i> Option 3: A general home/dashboard icon #}
-                            <span> Finance Dashboard </span>
-                        </a>
-                    </li>
-                    <li class="side-nav-item">
-                        <a href="{% url 'income_list' %}" class="side-nav-link">
-                            <i class="ri-currency-line"></i> {# Changed to a general currency icon for income #}
-                            {# <i class="ri-wallet-line"></i> Alternative for income if preferred #}
-                            <span> Income </span>
-                        </a>
-                    </li>
+        <li class="side-nav-item">
+            <a href="{% url 'home' %}" class="side-nav-link">
+                <i class="ri-global-line"></i>
+                <span>Go To Website</span>
+            </a>
+        </li>
 
-                    <li class="side-nav-item">
-                        <a href="{% url 'expense_list' %}" class="side-nav-link">
-                            <i class="ri-shopping-cart-line"></i>
-                            <span> Expenditure </span>
-                        </a>
-                    </li>
-                    <li class="side-nav-item">
-                        <a href="{% url 'financial_report' %}" class="side-nav-link">
-                            <i class="ri-file-chart-line"></i>
-                            <span> financial Report </span>
-                        </a>
-                    </li>
+        <li class="side-nav-item">
+            <a href="{% url 'members_list' %}" class="side-nav-link">
+                <i class="ri-vip-crown-line"></i>
+                <span>Membership</span>
+            </a>
+        </li>
 
-                    
+        <li class="side-nav-title">Finances</li>
 
-                    
+        <li class="side-nav-item">
+            <a href="{% url 'financial_dashboard' %}" class="side-nav-link">
+                <i class="ri-dashboard-line"></i>
+                <span>Finance Dashboard</span>
+            </a>
+        </li>
+        
+        <li class="side-nav-item">
+            <a href="{% url 'income_list' %}" class="side-nav-link">
+                <i class="ri-currency-line"></i>
+                <span>Income</span>
+            </a>
+        </li>
 
-                    <li class="side-nav-title">Front end</li>
+        <li class="side-nav-item">
+            <a href="{% url 'expense_list' %}" class="side-nav-link">
+                <i class="ri-shopping-cart-line"></i>
+                <span>Expenditure</span>
+            </a>
+        </li>
+        
+        <li class="side-nav-item">
+            <a href="{% url 'financial_report' %}" class="side-nav-link">
+                <i class="ri-file-chart-line"></i>
+                <span>Financial Report</span>
+            </a>
+        </li>
 
-                    
-                    <li class="side-nav-item">
-                        <a href="{% url 'executive_council_management' %}" class="side-nav-link">
-                            <i class="ri-team-line"></i>
-                            <span> Leadership </span> 
-                        </a>
-                    </li>
-                    
-                    <li class="side-nav-item">
-                        <a href="{% url 'gallery_management' %}" class="side-nav-link">
-                            <i class="ri-gallery-line"></i>
-                            <span> Gallery </span>
-                        </a>
-                    </li>
+        <li class="side-nav-title">Front end</li>
 
-                    <li class="side-nav-item">
-                        <a href="{% url 'forms_list' %}" class="side-nav-link">
-                            <i class="ri-file-text-line"></i>
-                            <span> Forms </span>
-                        </a>
-                    </li>
-                    
-                    <li class="side-nav-item">
-                        <a href="{% url 'signout' %}" class="side-nav-link">
-                            <i class="ri-logout-box-r-line"></i>
-                            <span> logout </span> 
-                        </a>
-                    </li>
+        <li class="side-nav-item">
+            <a href="{% url 'executive_council_management' %}" class="side-nav-link">
+                <i class="ri-team-line"></i>
+                <span>Leadership</span>
+            </a>
+        </li>
+        
+        <li class="side-nav-item">
+            <a href="{% url 'gallery_management' %}" class="side-nav-link">
+                <i class="ri-gallery-line"></i>
+                <span>Gallery</span>
+            </a>
+        </li>
 
+        <li class="side-nav-item">
+            <a href="{% url 'forms_list' %}" class="side-nav-link">
+                <i class="ri-file-text-line"></i>
+                <span>Forms</span>
+            </a>
+        </li>
 
-                    <!-- <li class="side-nav-item">
-                        <a data-bs-toggle="collapse" href="#sidebarPages" aria-expanded="false"
-                            aria-controls="sidebarPages" class="side-nav-link">
-                            <i class="ri-pages-fill"></i>
-                            <span> Pages </span>
-                            <span class="menu-arrow"></span>
-                        </a>
-                        <div class="collapse" id="sidebarPages">
-                            <ul class="side-nav-second-level">
-                                <li>
-                                    <a href="pages-invoice.html">Invoice</a>
-                                </li>
-                                <li>
-                                    <a href="pages-faq.html">FAQ</a>
-                                </li>
-                                <li>
-                                    <a href="pages-pricing.html">Pricing</a>
-                                </li>
-                                <li>
-                                    <a href="pages-maintenance.html">Maintenance</a>
-                                </li>
-                                <li>
-                                    <a href="pages-starter.html">Starter Page</a>
-                                </li>
-                                <li>
-                                    <a href="pages-preloader.html">With Preloader</a>
-                                </li>
-                                <li>
-                                    <a href="pages-timeline.html">Timeline</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </li> -->
+        <li class="side-nav-title">Secretary Admin</li>
+        
+        <li class="side-nav-item">
+            <a href="{% url 'secretary_list' %}" class="side-nav-link">
+                <i class="ri-file-text-line"></i>
+                <span>Secretary List</span>
+            </a>
+        </li>
 
-                    
+        <li class="side-nav-title">Account</li>
+        
+        <li class="side-nav-item">
+            <a href="{% url 'signout' %}" class="side-nav-link">
+                <i class="ri-logout-box-r-line"></i>
+                <span>Logout</span>
+            </a>
+        </li>
 
-                </ul>
-                <!--- End Sidemenu -->
+    {% endif %}
+</ul>
+<!--- End Sidemenu -->
 
                 <div class="clearfix"></div>
             </div>
