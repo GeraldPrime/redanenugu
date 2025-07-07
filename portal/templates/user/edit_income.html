@@ -33,7 +33,8 @@
               <!-- Current Amount Display -->
               <div class="alert alert-info">
                 <strong>Current Amount:</strong> ₦{{ income.amount|floatformat:2|intcomma }}
-                <small class="text-muted d-block">You can now modify the amount below.</small>
+                <br><strong>Current Payer:</strong> {{ income.get_payer_display }}
+                <small class="text-muted d-block">You can now modify the details below.</small>
               </div>
               
               <form method="POST">
@@ -59,6 +60,29 @@
                              step="0.01" min="0" value="{{ income.amount }}" required>
                       <small class="text-muted">Enter the new amount</small>
                     </div>
+                  </div>
+                </div>
+                
+                <!-- Payer Information Section -->
+                <div class="form-group">
+                  <label class="form-label">Payer Information</label>
+                  
+                  <!-- Payer Name Input (for non-Enugu validation fees) -->
+                  <div id="payer-name-section" {% if income.category == 'enugu_validation' %}style="display: none;"{% endif %}>
+                    <input type="text" name="payer_name" id="payer_name" class="form-control" 
+                           placeholder="Enter payer name" value="{% if income.payer_name %}{{ income.payer_name }}{% elif income.payer_member %}{{ income.payer_member.company_name }}{% endif %}">
+                    <small class="text-muted">Enter the name of the person or organization making the payment</small>
+                  </div>
+                  
+                  <!-- Member Dropdown (for Enugu validation fees) -->
+                  <div id="payer-member-section" {% if income.category != 'enugu_validation' %}style="display: none;"{% endif %}>
+                    <select name="payer_member" id="payer_member" class="form-control">
+                      <option value="">Select Member Company</option>
+                      {% for member in members %}
+                        <option value="{{ member.id }}" {% if income.payer_member and income.payer_member.id == member.id %}selected{% endif %}>{{ member.company_name }}</option>
+                      {% endfor %}
+                    </select>
+                    <small class="text-muted">Select the member company paying the validation fee</small>
                   </div>
                 </div>
                 
@@ -93,6 +117,7 @@
 // Format amount display and validation
 document.addEventListener('DOMContentLoaded', function() {
   const amountInput = document.getElementById('amount');
+  const categorySelect = document.getElementById('category');
   
   // Format amount on load
   if (amountInput.value) {
@@ -110,6 +135,49 @@ document.addEventListener('DOMContentLoaded', function() {
   amountInput.addEventListener('blur', function() {
     if (this.value) {
       this.value = parseFloat(this.value).toFixed(2);
+    }
+  });
+  
+  // Handle category change to show/hide payer fields
+  categorySelect.addEventListener('change', function() {
+    const category = this.value;
+    const payerNameSection = document.getElementById('payer-name-section');
+    const payerMemberSection = document.getElementById('payer-member-section');
+    const payerNameInput = document.getElementById('payer_name');
+    const payerMemberSelect = document.getElementById('payer_member');
+    
+    if (category === 'enugu_validation') {
+      // Show member dropdown for Enugu validation fees
+      payerNameSection.style.display = 'none';
+      payerMemberSection.style.display = 'block';
+      
+      // If there's a payer name but no member selected, try to find matching member
+      if (payerNameInput.value && !payerMemberSelect.value) {
+        const payerName = payerNameInput.value.toLowerCase();
+        // Try to find a member with matching company name
+        for (let option of payerMemberSelect.options) {
+          if (option.text.toLowerCase().includes(payerName) || payerName.includes(option.text.toLowerCase())) {
+            payerMemberSelect.value = option.value;
+            break;
+          }
+        }
+      }
+    } else if (category) {
+      // Show payer name input for other categories
+      payerNameSection.style.display = 'block';
+      payerMemberSection.style.display = 'none';
+      
+      // If there's a member selected but no payer name, use the member's company name
+      if (payerMemberSelect.value && !payerNameInput.value) {
+        const selectedOption = payerMemberSelect.options[payerMemberSelect.selectedIndex];
+        if (selectedOption) {
+          payerNameInput.value = selectedOption.text;
+        }
+      }
+    } else {
+      // Hide both if no category selected
+      payerNameSection.style.display = 'none';
+      payerMemberSection.style.display = 'none';
     }
   });
 });

@@ -200,6 +200,34 @@ class Member(models.Model):
         super().save(*args, **kwargs)
 
 # =======================================finances========================================
+# class Income(models.Model):
+#     INCOME_CATEGORIES = [
+#         ('national_rebate', 'National rebate(registration)'),
+#         ('enugu_validation', 'Enugu validation fee'),
+#         ('donations', 'Donations'),
+#         ('other_sources', 'Other sources'),
+#     ]
+    
+#     category = models.CharField(max_length=50, choices=INCOME_CATEGORIES)
+#     amount = models.DecimalField(max_digits=15, decimal_places=2)
+#     date = models.DateField()
+#     description = models.TextField(blank=True, null=True)
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField(auto_now=True)
+    
+#     class Meta:
+#         ordering = ['-date', '-created_at']
+    
+#     def __str__(self):
+#         return f"{self.get_category_display()} - ₦{self.amount:,.2f}"
+    
+#     @classmethod
+#     def get_total_income(cls):
+#         """Get total income"""
+#         return cls.objects.aggregate(total=Sum('amount'))['total'] or 0
+
+
+# Updated Income model with payer field
 class Income(models.Model):
     INCOME_CATEGORIES = [
         ('national_rebate', 'National rebate(registration)'),
@@ -212,6 +240,18 @@ class Income(models.Model):
     amount = models.DecimalField(max_digits=15, decimal_places=2)
     date = models.DateField()
     description = models.TextField(blank=True, null=True)
+    
+    # New payer fields
+    payer_name = models.CharField(max_length=255, blank=True, null=True, verbose_name="Payer Name")
+    payer_member = models.ForeignKey(
+        'Member', 
+        on_delete=models.SET_NULL, 
+        blank=True, 
+        null=True,
+        verbose_name="Payer (Member Company)",
+        help_text="Select member company for Enugu validation fees"
+    )
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -220,6 +260,13 @@ class Income(models.Model):
     
     def __str__(self):
         return f"{self.get_category_display()} - ₦{self.amount:,.2f}"
+    
+    @property
+    def get_payer_display(self):
+        """Get the appropriate payer name to display"""
+        if self.category == 'enugu_validation' and self.payer_member:
+            return self.payer_member.company_name
+        return self.payer_name or "Not specified"
     
     @classmethod
     def get_total_income(cls):

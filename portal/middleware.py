@@ -33,10 +33,18 @@ class SecretaryAdminMiddleware:
                     'edit_expense',
                     'delete_expense',
                     'signout',
+                    'members_list',
+                    'create_member',
+                    'member_detail',
+                    'edit_member',
+                    'delete_member',
+                    'renew_certificate',
+                    
                 ]
                 
                 # Define allowed URL paths for secretary
                 allowed_paths = [
+                    '/members/',
                     '/financial/',              # Added finance dashboard path
                     '/financial-report/',       # Added financial report path
                     '/income/',

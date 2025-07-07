@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load humanize %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice - {{ income.id }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            
+            .print-only {
+                display: block !important;
+            }
+            
+            body {
+                background: white !important;
+                color: black !important;
+                font-size: 12px;
+            }
+            
+            .invoice-container {
+                box-shadow: none !important;
+                border: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            
+            .page-break {
+                page-break-after: always;
+            }
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .invoice-container {
+            max-width: 800px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .invoice-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .company-logo {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #667eea;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .invoice-title {
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .invoice-number {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .invoice-body {
+            padding: 40px;
+        }
+        
+        .invoice-details {
+            margin-bottom: 30px;
+        }
+        
+        .detail-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+        
+        .detail-value {
+            color: #212529;
+            font-size: 1.1rem;
+        }
+        
+        .amount-section {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .amount-label {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+        
+        .amount-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .invoice-footer {
+            background: #f8f9fa;
+            padding: 20px 40px;
+            border-top: 1px solid #dee2e6;
+            text-align: center;
+            color: #6c757d;
+        }
+        
+        .action-buttons {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .btn-action {
+            margin-left: 10px;
+            border-radius: 25px;
+            padding: 10px 20px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-print {
+            background: #007bff;
+            color: white;
+            border: none;
+        }
+        
+        .btn-print:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,123,255,0.4);
+        }
+        
+        .btn-download {
+            background: #28a745;
+            color: white;
+            border: none;
+        }
+        
+        .btn-download:hover {
+            background: #1e7e34;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(40,167,69,0.4);
+        }
+        
+        .btn-back {
+            background: #6c757d;
+            color: white;
+            border: none;
+        }
+        
+        .btn-back:hover {
+            background: #545b62;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(108,117,125,0.4);
+        }
+        
+        .category-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .badge-info {
+            background-color: #17a2b8;
+            color: white;
+        }
+        
+        .badge-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        
+        .badge-success {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .badge-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .badge-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 6rem;
+            color: rgba(0,0,0,0.05);
+            font-weight: bold;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .content-overlay {
+            position: relative;
+            z-index: 2;
+        }
+    </style>
+</head>
+<body>
+    <!-- Action Buttons -->
+    <div class="action-buttons no-print">
+        <button onclick="window.print()" class="btn-action btn-print">
+            <i class="fas fa-print"></i> Print
+        </button>
+        <button onclick="downloadPDF()" class="btn-action btn-download">
+            <i class="fas fa-download"></i> Download PDF
+        </button>
+        <a href="{% url 'income_list' %}" class="btn-action btn-back">
+            <i class="fas fa-arrow-left"></i> Back to List
+        </a>
+    </div>
+
+    <div class="invoice-container">
+        <!-- Watermark -->
+        <div class="watermark">INVOICE</div>
+        
+        <!-- Invoice Header -->
+        <div class="invoice-header">
+            <div class="content-overlay">
+                <div class="company-logo">
+                    <!-- Replace with your company logo -->
+                    <i class="fas fa-building"></i>
+                </div>
+                <h1 class="invoice-title">INVOICE</h1>
+                <p class="invoice-number">Invoice #{{ income.id|stringformat:"04d" }}</p>
+            </div>
+        </div>
+
+        <!-- Invoice Body -->
+        <div class="invoice-body">
+            <div class="content-overlay">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="detail-box">
+                            <div class="detail-label">From:</div>
+                            <div class="detail-value">
+                                <strong>Your Company Name</strong><br>
+                                Your Company Address<br>
+                                City, State, ZIP Code<br>
+                                Phone: (xxx) xxx-xxxx<br>
+                                Email: info@yourcompany.com
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-box">
+                            <div class="detail-label">To:</div>
+                            <div class="detail-value">
+                                <strong>{{ income.payer_name|default:"N/A" }}</strong><br>
+                                <!-- Add payer address fields if available -->
+                                {% if income.payer_address %}
+                                    {{ income.payer_address }}<br>
+                                {% endif %}
+                                {% if income.payer_phone %}
+                                    Phone: {{ income.payer_phone }}<br>
+                                {% endif %}
+                                {% if income.payer_email %}
+                                    Email: {{ income.payer_email }}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="detail-box">
+                            <div class="detail-label">Invoice Date:</div>
+                            <div class="detail-value">{{ income.date|date:"F d, Y" }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-box">
+                            <div class="detail-label">Category:</div>
+                            <div class="detail-value">
+                                {% if income.category == 'national_rebate' %}
+                                    <span class="category-badge badge-info">{{ income.get_category_display }}</span>
+                                {% elif income.category == 'enugu_validation' %}
+                                    <span class="category-badge badge-warning">{{ income.get_category_display }}</span>
+                                {% elif income.category == 'donations' %}
+                                    <span class="category-badge badge-success">{{ income.get_category_display }}</span>
+                                {% elif income.category == 'other_sources' %}
+                                    <span class="category-badge badge-secondary">{{ income.get_category_display }}</span>
+                                {% else %}
+                                    <span class="category-badge badge-primary">{{ income.get_category_display }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if income.description %}
+                <div class="detail-box">
+                    <div class="detail-label">Description:</div>
+                    <div class="detail-value">{{ income.description }}</div>
+                </div>
+                {% endif %}
+
+                <!-- Amount Section -->
+                <div class="amount-section">
+                    <div class="amount-label">Total Amount</div>
+                    <div class="amount-value">₦{{ income.amount|floatformat:2|intcomma }}</div>
+                </div>
+
+                <!-- Payment Details -->
+                <div class="detail-box">
+                    <div class="detail-label">Payment Status:</div>
+                    <div class="detail-value">
+                        <span class="category-badge badge-success">RECEIVED</span>
+                    </div>
+                </div>
+
+                {% if income.notes %}
+                <div class="detail-box">
+                    <div class="detail-label">Notes:</div>
+                    <div class="detail-value">{{ income.notes }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Invoice Footer -->
+        <div class="invoice-footer">
+            <div class="content-overlay">
+                <p><strong>Thank you for your business!</strong></p>
+                <p>Generated on {{ "now"|date:"F d, Y H:i" }}</p>
+                <p>This is an electronically generated invoice.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        function downloadPDF() {
+            const element = document.querySelector('.invoice-container');
+            const opt = {
+                margin: 0.5,
+                filename: `invoice_${document.querySelector('.invoice-number').textContent.replace('#', '')}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+
+            // Hide action buttons during PDF generation
+            document.querySelector('.action-buttons').style.display = 'none';
+            
+            html2canvas(element, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: '#ffffff'
+            }).then(canvas => {
+                const imgData = canvas.toDataURL('image/jpeg', 1.0);
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+                
+                const imgWidth = 210;
+                const pageHeight = 295;
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                let heightLeft = imgHeight;
+                let position = 0;
+
+                pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+
+                pdf.save(`invoice_{{ income.id|stringformat:"04d" }}.pdf`);
+                
+                // Show action buttons again
+                document.querySelector('.action-buttons').style.display = 'block';
+            });
+        }
+
+        // Auto-hide action buttons on print
+        window.addEventListener('beforeprint', function() {
+            document.querySelector('.action-buttons').style.display = 'none';
+        });
+
+        window.addEventListener('afterprint', function() {
+            document.querySelector('.action-buttons').style.display = 'block';
+        });
+    </script>
+</body>
+</html>

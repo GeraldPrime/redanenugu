@@ -87,6 +87,9 @@ urlpatterns = [
     # sec
     path('secretary-dashboard/', views.secretary_dashboard, name='secretary_dashboard'),
     
+    # invoiced
+    path('invoice/<int:income_id>/', views.print_invoice, name='print_invoice'),
+    
 
  ]
 if settings.DEBUG:  # Only serve media files during development

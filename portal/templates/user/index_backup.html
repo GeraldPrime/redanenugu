@@ -19,23 +19,23 @@
       <!-- Main Statistics Cards -->
       <div class="row">
         <div class="col-sm-6 col-xxl-3">
-          <div class="card text-bg-info border-info">
+          <div class="card">
             <div class="card-body">
               <div class="row align-items-center">
                 <div class="col-8">
-                  <h5 class="text-white text-opacity-75 fw-normal mt-0 text-truncate" title="Total Members">
+                  <h5 class="text-muted fw-normal mt-0 text-truncate" title="Total Members">
                     Total Members
                   </h5>
-                  <h3 class="my-1 py-1 text-truncate text-white">{{ total_members|default:"0"|floatformat:0|add:0 }}</h3>
-                  <p class="mb-0 text-white text-opacity-75">
-                    <span class="text-white me-2">
+                  <h3 class="my-1 py-1 text-truncate">{{ total_members|default:"0"|floatformat:0|add:0 }}</h3>
+                  <p class="mb-0 text-muted">
+                    <span class="text-success me-2">
                       <i class="ri-arrow-up-line"></i> {{ new_members_this_month|default:"0"|floatformat:0|add:0 }} this month
                     </span>
                   </p>
                 </div>
                 <div class="col-4">
                   <div class="text-end">
-                    <i class="ri-group-line text-white" style="font-size: 2.5rem;"></i>
+                    <i class="ri-group-line text-primary" style="font-size: 2.5rem;"></i>
                   </div>
                 </div>
               </div>
@@ -44,23 +44,23 @@
         </div>
 
         <div class="col-sm-6 col-xxl-3">
-          <div class="card text-bg-success border-success">
+          <div class="card">
             <div class="card-body">
               <div class="row align-items-center">
                 <div class="col-8">
-                  <h5 class="text-white text-opacity-75 fw-normal mt-0 text-truncate" title="Total Income">
+                  <h5 class="text-muted fw-normal mt-0 text-truncate" title="Total Income">
                     Total Income
                   </h5>
-                  <h3 class="my-1 py-1 text-truncate text-white">₦{{ total_income|floatformat:2|default:"0.00" }}</h3>
-                  <p class="mb-0 text-white text-opacity-75">
-                    <span class="text-white me-2">
+                  <h3 class="my-1 py-1 text-truncate">₦{{ total_income|floatformat:2|default:"0.00" }}</h3>
+                  <p class="mb-0 text-muted">
+                    <span class="text-info me-2">
                       <i class="ri-arrow-up-line"></i> {{ income_count|default:"0"|floatformat:0|add:0 }} transactions
                     </span>
                   </p>
                 </div>
                 <div class="col-4">
                   <div class="text-end">
-                    <i class="ri-money-dollar-circle-line text-white" style="font-size: 2.5rem;"></i>
+                    <i class="ri-money-dollar-circle-line text-success" style="font-size: 2.5rem;"></i>
                   </div>
                 </div>
               </div>
@@ -69,23 +69,23 @@
         </div>
 
         <div class="col-sm-6 col-xxl-3">
-          <div class="card text-bg-warning border-warning">
+          <div class="card">
             <div class="card-body">
               <div class="row align-items-center">
                 <div class="col-8">
-                  <h5 class="text-white text-opacity-75 fw-normal mt-0 text-truncate" title="Total Expenses">
+                  <h5 class="text-muted fw-normal mt-0 text-truncate" title="Total Expenses">
                     Total Expenses
                   </h5>
-                  <h3 class="my-1 py-1 text-truncate text-white">₦{{ total_expenses|floatformat:2|default:"0.00" }}</h3>
-                  <p class="mb-0 text-white text-opacity-75">
-                    <span class="text-white me-2">
+                  <h3 class="my-1 py-1 text-truncate">₦{{ total_expenses|floatformat:2|default:"0.00" }}</h3>
+                  <p class="mb-0 text-muted">
+                    <span class="text-warning me-2">
                       <i class="ri-arrow-down-line"></i> {{ expense_count|default:"0"|floatformat:0|add:0 }} transactions
                     </span>
                   </p>
                 </div>
                 <div class="col-4">
                   <div class="text-end">
-                    <i class="ri-money-dollar-circle-line text-white" style="font-size: 2.5rem;"></i>
+                    <i class="ri-money-dollar-circle-line text-danger" style="font-size: 2.5rem;"></i>
                   </div>
                 </div>
               </div>

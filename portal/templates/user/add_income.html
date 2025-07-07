@@ -1,19 +1,16 @@
 {% extends 'user/base.html' %}
-
 {% block title %}Add Income{% endblock %}
-
 {% block content %}
 <div class="content-page">
   <div class="content">
     <div class="container-fluid mt-4">
-
       <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Add New Income</h2>
         <a href="{% url 'income_list' %}" class="btn btn-secondary">
           <i class="ri-arrow-left-line"></i> Back to Income List
         </a>
       </div>
-
+      
       {% if messages %}
         {% for message in messages %}
           <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
@@ -24,7 +21,7 @@
           </div>
         {% endfor %}
       {% endif %}
-
+      
       <div class="row justify-content-center">
         <div class="col-md-8">
           <div class="card shadow">
@@ -55,17 +52,40 @@
                     </div>
                   </div>
                 </div>
-
+                
+                <!-- Payer Information Section -->
+                <div class="form-group">
+                  <label class="form-label">Payer Information</label>
+                  
+                  <!-- Payer Name Input (for non-Enugu validation fees) -->
+                  <div id="payer-name-section" style="display: none;">
+                    <input type="text" name="payer_name" id="payer_name" class="form-control" 
+                           placeholder="Enter payer name">
+                    <small class="text-muted">Enter the name of the person or organization making the payment</small>
+                  </div>
+                  
+                  <!-- Member Dropdown (for Enugu validation fees) -->
+                  <div id="payer-member-section" style="display: none;">
+                    <select name="payer_member" id="payer_member" class="form-control">
+                      <option value="">Select Member Company</option>
+                      {% for member in members %}
+                        <option value="{{ member.id }}">{{ member.company_name }}</option>
+                      {% endfor %}
+                    </select>
+                    <small class="text-muted">Select the member company paying the validation fee</small>
+                  </div>
+                </div>
+                
                 <div class="form-group">
                   <label for="date" class="form-label">Date <span class="text-danger">*</span></label>
                   <input type="date" name="date" id="date" class="form-control" required>
                 </div>
-
+                
                 <div class="form-group">
                   <label for="description" class="form-label">Description</label>
                   <textarea name="description" id="description" class="form-control" rows="3" placeholder="Enter description (optional)"></textarea>
                 </div>
-
+                
                 <div class="form-group text-right">
                   <a href="{% url 'income_list' %}" class="btn btn-secondary mr-2">Cancel</a>
                   <button type="submit" class="btn btn-success">
@@ -84,6 +104,33 @@
 <script>
 // Set today's date as default
 document.getElementById('date').valueAsDate = new Date();
+
+// Handle category change to show/hide payer fields
+document.getElementById('category').addEventListener('change', function() {
+  const category = this.value;
+  const payerNameSection = document.getElementById('payer-name-section');
+  const payerMemberSection = document.getElementById('payer-member-section');
+  
+  if (category === 'enugu_validation') {
+    // Show member dropdown for Enugu validation fees
+    payerNameSection.style.display = 'none';
+    payerMemberSection.style.display = 'block';
+    
+    // Clear payer name field
+    document.getElementById('payer_name').value = '';
+  } else if (category) {
+    // Show payer name input for other categories
+    payerNameSection.style.display = 'block';
+    payerMemberSection.style.display = 'none';
+    
+    // Clear member selection
+    document.getElementById('payer_member').value = '';
+  } else {
+    // Hide both if no category selected
+    payerNameSection.style.display = 'none';
+    payerMemberSection.style.display = 'none';
+  }
+});
 
 // Format amount input
 document.getElementById('amount').addEventListener('input', function(e) {

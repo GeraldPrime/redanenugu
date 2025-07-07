@@ -353,9 +353,9 @@ def user(request):
     
     return render(request, "user/index.html", context)
 
+# =========MEMBERSHIP===========
 
 @login_required
-@admin_required
 def members_list(request):
     """List all members with search and filter functionality"""
     members = Member.objects.all()
@@ -402,7 +402,6 @@ def members_list(request):
 
 
 @login_required
-@admin_required
 def create_member(request):
     """Create a new member"""
     if request.method == 'POST':
@@ -464,7 +463,6 @@ def create_member(request):
 
 
 @login_required
-@admin_required
 def member_detail(request, member_id):
     """View member details"""
     member = get_object_or_404(Member, id=member_id)
@@ -475,7 +473,6 @@ def member_detail(request, member_id):
 
 
 @login_required
-@admin_required
 def edit_member(request, member_id):
     """Edit member information"""
     member = get_object_or_404(Member, id=member_id)
@@ -551,7 +548,6 @@ def edit_member(request, member_id):
 
 
 @login_required
-@admin_required
 def delete_member(request, member_id):
     """Delete a member"""
     member = get_object_or_404(Member, id=member_id)
@@ -576,7 +572,6 @@ def delete_member(request, member_id):
 
 @require_POST
 @login_required
-@admin_required
 def renew_certificate(request, member_id):
     """Renew member certificate"""
     member = get_object_or_404(Member, id=member_id)
@@ -615,6 +610,7 @@ def financial_dashboard(request):
     return render(request, 'user/finance_dashboard.html', context)
 
 
+
 @login_required
 def income_list(request):
     """List all income records"""
@@ -626,11 +622,17 @@ def income_list(request):
     if search_query:
         income_records = income_records.filter(
             Q(description__icontains=search_query) |
-            Q(category__icontains=search_query)
+            Q(category__icontains=search_query) |
+            Q(payer_name__icontains=search_query) |
+            Q(payer_member__company_name__icontains=search_query)
         )
     
     if category_filter:
         income_records = income_records.filter(category=category_filter)
+        
+    payer_filter = request.GET.get('payer', '')
+    if payer_filter:
+        income_records = income_records.filter(payer_name__icontains=payer_filter)
     
     paginator = Paginator(income_records, 20)
     page_number = request.GET.get('page')
@@ -645,7 +647,6 @@ def income_list(request):
     }
     return render(request, 'user/income_list.html', context)
 
-
 @login_required
 def add_income(request):
     """Add new income record"""
@@ -656,17 +657,35 @@ def add_income(request):
             date = request.POST.get('date')
             description = request.POST.get('description', '')
             
+            # Handle payer information
+            payer_name = None
+            payer_member = None
+            
+            if category == 'enugu_validation':
+                # For Enugu validation fee, get member from dropdown
+                payer_member_id = request.POST.get('payer_member')
+                if payer_member_id:
+                    payer_member = get_object_or_404(Member, id=payer_member_id)
+            else:
+                # For other categories, get manual payer name
+                payer_name = request.POST.get('payer_name', '').strip()
+            
             # Validate required fields
             if not category or not amount or not date:
                 messages.error(request, 'Please fill in all required fields.')
-                return render(request, 'user/add_income.html', {'income_categories': Income.INCOME_CATEGORIES})
+                return render(request, 'user/add_income.html', {
+                    'income_categories': Income.INCOME_CATEGORIES,
+                    'members': Member.objects.filter(company_name__isnull=False).order_by('company_name')
+                })
             
             # Create income record
             Income.objects.create(
                 category=category,
                 amount=amount,
                 date=date,
-                description=description
+                description=description,
+                payer_name=payer_name,
+                payer_member=payer_member
             )
             
             messages.success(request, f'Income record added successfully. Amount: ₦{amount:,.2f}')
@@ -677,9 +696,9 @@ def add_income(request):
     
     context = {
         'income_categories': Income.INCOME_CATEGORIES,
+        'members': Member.objects.filter(company_name__isnull=False).order_by('company_name')
     }
     return render(request, 'user/add_income.html', context)
-
 
 @login_required
 def edit_income(request, income_id):
@@ -693,19 +712,35 @@ def edit_income(request, income_id):
             date = request.POST.get('date')
             description = request.POST.get('description', '')
             
+            # Handle payer information
+            payer_name = None
+            payer_member = None
+            
+            if category == 'enugu_validation':
+                # For Enugu validation fee, get member from dropdown
+                payer_member_id = request.POST.get('payer_member')
+                if payer_member_id:
+                    payer_member = get_object_or_404(Member, id=payer_member_id)
+            else:
+                # For other categories, get manual payer name
+                payer_name = request.POST.get('payer_name', '').strip()
+            
             # Validate required fields
             if not category or not amount or not date:
                 messages.error(request, 'Please fill in all required fields.')
                 return render(request, 'user/edit_income.html', {
                     'income': income,
-                    'income_categories': Income.INCOME_CATEGORIES
+                    'income_categories': Income.INCOME_CATEGORIES,
+                    'members': Member.objects.filter(company_name__isnull=False).order_by('company_name')
                 })
             
-            # Update income record (now including amount)
+            # Update income record
             income.category = category
             income.amount = amount
             income.date = date
             income.description = description
+            income.payer_name = payer_name
+            income.payer_member = payer_member
             income.save()
             
             messages.success(request, f'Income record updated successfully. New Amount: ₦{amount:,.2f}')
@@ -717,10 +752,9 @@ def edit_income(request, income_id):
     context = {
         'income': income,
         'income_categories': Income.INCOME_CATEGORIES,
+        'members': Member.objects.filter(company_name__isnull=False).order_by('company_name')
     }
     return render(request, 'user/edit_income.html', context)
-
-
 @login_required
 def delete_income(request, income_id):
     """Delete income record"""
@@ -1609,3 +1643,8 @@ def secretary_dashboard(request):
     
     return render(request, 'user/secretary_dashboard.html', context)
 
+
+
+def print_invoice(request, income_id):
+    income = get_object_or_404(Income, id=income_id)
+    return render(request, 'user/invoice_template.html', {'income': income})
