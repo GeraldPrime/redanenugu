@@ -1,0 +1,202 @@
+{% extends 'user/base.html' %}
+
+{% block titile %}Send Email to Members{% endblock titile %}
+
+{% block content %}
+<div class="content-page">
+    <div class="content">
+        <div class="container-fluid mt-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Send Email to Members</h2>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-info" id="checkMemberCount">
+                        <i class="ri-refresh-line"></i> Check Member Count
+                    </button>
+                    <a href="{% url 'home' %}" class="btn btn-secondary">
+                        <i class="ri-arrow-left-line"></i> Back Home
+                    </a>
+                </div>
+            </div>
+
+            <div class="row justify-content-center">
+                <div class="col-md-10">
+                    <div class="card shadow">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="ri-mail-send-line"></i> Send General Email to All Members
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            
+                            <!-- Member Count Alert -->
+                            <div class="alert alert-info d-flex align-items-center mb-4">
+                                <i class="ri-information-line me-2"></i>
+                                <div>
+                                    <strong>Recipients:</strong> 
+                                    <span id="memberCountText">{{ member_count }} members will receive this email</span>
+                                </div>
+                            </div>
+
+                            <form method="POST" id="emailForm">
+                                {% csrf_token %}
+                                
+                                <!-- Subject Field -->
+                                <div class="form-group mb-3">
+                                    <label for="subject" class="form-label">
+                                        Subject <span class="text-danger">*</span>
+                                    </label>
+                                    <input 
+                                        type="text" 
+                                        name="subject" 
+                                        id="subject" 
+                                        class="form-control" 
+                                        placeholder="Enter email subject/title"
+                                        maxlength="200"
+                                        required
+                                    >
+                                    <small class="form-text text-muted">
+                                        Maximum 200 characters
+                                    </small>
+                                </div>
+
+                                <!-- Message Field -->
+                                <div class="form-group mb-4">
+                                    <label for="message" class="form-label">
+                                        Message <span class="text-danger">*</span>
+                                    </label>
+                                    <textarea 
+                                        name="message" 
+                                        id="message" 
+                                        class="form-control" 
+                                        rows="12"
+                                        placeholder="Enter your message here..."
+                                        required
+                                    ></textarea>
+                                    <small class="form-text text-muted">
+                                        This message will be sent to all members with valid email addresses.
+                                    </small>
+                                </div>
+
+                                <!-- Warning Alert -->
+                                <div class="alert alert-warning">
+                                    <i class="ri-alert-line"></i>
+                                    <strong>Important:</strong> 
+                                    This email will be sent to all members in the database. 
+                                    Please review your message carefully before sending.
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="form-check">
+                                        <input 
+                                            class="form-check-input" 
+                                            type="checkbox" 
+                                            id="confirmSend" 
+                                            required
+                                        >
+                                        <label class="form-check-label" for="confirmSend">
+                                            I confirm that I want to send this email to all members
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-end">
+                                        <button type="submit" class="btn btn-primary" id="sendBtn" disabled>
+                                            <i class="ri-mail-send-line"></i> Send Email
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Preview Modal Removed -->
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmCheckbox = document.getElementById('confirmSend');
+    const sendBtn = document.getElementById('sendBtn');
+    const checkMemberCountBtn = document.getElementById('checkMemberCount');
+    const subjectInput = document.getElementById('subject');
+    const messageInput = document.getElementById('message');
+    const emailForm = document.getElementById('emailForm');
+
+    // Enable/disable send button based on confirmation checkbox
+    confirmCheckbox.addEventListener('change', function() {
+        sendBtn.disabled = !this.checked;
+    });
+
+    // Preview functionality removed
+
+    // Check member count
+    checkMemberCountBtn.addEventListener('click', function() {
+        const btn = this;
+        const originalText = btn.innerHTML;
+        
+        btn.innerHTML = '<i class="ri-loader-4-line"></i> Checking...';
+        btn.disabled = true;
+        
+        fetch('{% url "get_member_email_count" %}')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('memberCountText').textContent = data.message;
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                alert('Error checking member count. Please try again.');
+            });
+    });
+
+    // Form submission with loading state
+    emailForm.addEventListener('submit', function(e) {
+        const subject = subjectInput.value.trim();
+        const message = messageInput.value.trim();
+        
+        if (!subject || !message) {
+            e.preventDefault();
+            alert('Please enter both subject and message.');
+            return;
+        }
+        
+        if (!confirmCheckbox.checked) {
+            e.preventDefault();
+            alert('Please confirm that you want to send this email to all members.');
+            return;
+        }
+        
+        // Show loading state
+        sendBtn.innerHTML = '<i class="ri-loader-4-line"></i> Sending...';
+        sendBtn.disabled = true;
+        
+        // Show confirmation dialog
+        if (!confirm(`Are you sure you want to send this email to all members?\n\nSubject: ${subject}`)) {
+            e.preventDefault();
+            sendBtn.innerHTML = '<i class="ri-mail-send-line"></i> Send Email';
+            sendBtn.disabled = false;
+            return;
+        }
+    });
+
+    // Character count for subject
+    subjectInput.addEventListener('input', function() {
+        const remaining = 200 - this.value.length;
+        const helpText = this.nextElementSibling;
+        helpText.textContent = `${remaining} characters remaining`;
+        
+        if (remaining < 20) {
+            helpText.classList.add('text-warning');
+        } else {
+            helpText.classList.remove('text-warning');
+        }
+    });
+});
+</script>
+{% endblock content %}

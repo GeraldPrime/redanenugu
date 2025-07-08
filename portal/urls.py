@@ -91,11 +91,15 @@ urlpatterns = [
     path('invoice/<int:income_id>/', views.print_invoice, name='print_invoice'),
     
     
-    # Email management URLs
+    # Email management URLs(MEMBERSHIP)
     # path('emails/', views.email_dashboard, name='email_dashboard'),
     path('emails/send/<int:member_id>/', views.send_individual_email, name='send_individual_email'),
     path('emails/bulk/', views.send_bulk_email, name='send_bulk_email'),
     path('emails/preview/', views.get_email_preview, name='get_email_preview'),
+    
+    # Email URLs
+    path('send-email/', views.send_email_to_members, name='send_email_to_members'),
+    path('get-member-email-count/', views.get_member_email_count, name='get_member_email_count'),
     
 
  ]

@@ -45,12 +45,17 @@ from .helper import admin_required, admin_or_secretary_required, secretary_requi
 
 from .utils.email_utils import send_certificate_expiry_email, send_bulk_certificate_emails, get_default_email_message
 import json
+import logging
+
+from django.conf import settings
+from .utils.email_utils import send_email_to_all_members, get_member_emails
 
 
 
 
 
 # Create your views here.
+logger = logging.getLogger(__name__)
 
 def home(request):
     return render(request, "frontend/index.html")
@@ -1920,3 +1925,56 @@ def get_email_preview(request):
             'success': False,
             'error': str(e)
         })
+
+
+
+
+# ==================MEMBERS EMAILING=========================
+
+
+@login_required
+def send_email_to_members(request):
+    """View to display email form and handle sending emails to all members"""
+    
+    if request.method == 'POST':
+        subject = request.POST.get('subject', '').strip()
+        message = request.POST.get('message', '').strip()
+        
+        # Simple validation
+        if not subject or not message:
+            messages.error(request, 'Both subject and message are required.')
+            return render(request, 'user/send_email.html')
+        
+        # Use utils to send email
+        success, result_message = send_email_to_all_members(subject, message)
+        
+        if success:
+            messages.success(request, result_message)
+            return redirect('send_email_to_members')
+        else:
+            messages.error(request, result_message)
+            return render(request, 'user/send_email.html')
+    
+    # GET request - show form with member count
+    member_emails = get_member_emails()
+    member_count = len(member_emails)
+    
+    context = {
+        'member_count': member_count,
+    }
+    
+    return render(request, 'emails/send_email.html', context)
+
+@login_required
+@require_http_methods(["GET"])
+def get_member_email_count(request):
+    """Get current member email count"""
+    member_emails = get_member_emails()
+    member_count = len(member_emails)
+    
+    return JsonResponse({
+        'count': member_count,
+        'message': f'{member_count} members will receive this email'
+    })
+
+# Preview function removed - not needed

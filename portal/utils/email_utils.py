@@ -116,3 +116,38 @@ Administration Team"""
     
     return ""
 
+
+
+# utils/email_utils.py
+from django.core.mail import EmailMessage
+from django.conf import settings
+from ..models import Member
+
+def get_member_emails():
+    """Get all valid member email addresses"""
+    members = Member.objects.filter(
+        company_email__isnull=False
+    ).exclude(company_email='')
+    
+    return [member.company_email for member in members if member.company_email]
+
+def send_email_to_all_members(subject, message):
+    """Send email to all members - simple version"""
+    try:
+        recipient_emails = get_member_emails()
+        
+        if not recipient_emails:
+            return False, "No members with valid email addresses found"
+        
+        email = EmailMessage(
+            subject=subject,
+            body=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            bcc=recipient_emails,
+        )
+        
+        email.send()
+        return True, f"Email sent to {len(recipient_emails)} members"
+        
+    except Exception as e:
+        return False, f"Error sending email: {str(e)}"
