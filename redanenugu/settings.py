@@ -143,3 +143,25 @@ STATICFILES_DIRS = [
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = '/signin/'
+
+
+# Email Configuration
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = 'redanenugu@gmail.com'           
+DEFAULT_FROM_EMAIL = 'REDAN Enugu <redanenugu@gmail.com>'                      
+EMAIL_HOST_PASSWORD = 'mrly vbte rtyv eaee'            
+# EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')            
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = True
+EMAIL_PORT = 465
+EMAIL_TIMEOUT = 30
+
+"""B. Set up SPF, DKIM, and DMARC records
+Add these DNS records to your domain:
+
+SPF Record: v=spf1 include:_spf.google.com ~all
+DKIM: Set up through Google Admin Console
+DMARC: v=DMARC1; p=quarantine; rua=mailto:dmarc@yourcompany.com
+"""
+

@@ -1,0 +1,193 @@
+<!-- templates/emails/certificate_renewal.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificate Renewal Notification</title>
+    <link rel="shortcut icon" href="/static/frontend/images/redanlogo.jpg">
+    <link
+      rel="shortcut icon"
+      href="/static/frontend/images/redanlogo.jpg"
+      type="image/x-icon"
+    />
+
+    <!-- Daterangepicker css -->
+    <link rel="stylesheet" href="/static/users/assets/vendor/daterangepicker/daterangepicker.css">
+
+    <!-- Vector Map css -->
+    <link rel="stylesheet"
+        href="/static/users/assets/vendor/admin-resources/jquery.vectormap/jquery-jvectormap-1.2.2.css">
+
+    <!-- Theme Config Js -->
+    <script src="/static/users/assets/js/config.js"></script>
+
+    <!-- App css -->
+    <link href="/static/users/assets/css/app.min.css" rel="stylesheet" type="text/css" id="app-style" />
+
+    <!-- Icons css -->
+    <link href="/static/users/assets/css/icons.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .content {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .alert {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .alert-warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        .alert-danger {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            font-size: 14px;
+            color: #666;
+        }
+        .highlight {
+            background-color: #e7f3ff;
+            padding: 10px;
+            border-radius: 3px;
+            margin: 10px 0;
+        }
+        .contact-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">REDAN Enugu State Chapter</div>
+        <p>Real Estate Developers Association of Nigeria</p>
+    </div>
+
+    <div class="content">
+        <h2>Certificate Renewal Notification</h2>
+        
+        <p>Dear {{ company_name }},</p>
+        
+        {% if email_type == 'expired' %}
+        <div class="alert alert-danger">
+            <strong>⚠️ Certificate Expired</strong><br>
+            Your certificate has expired and requires immediate renewal.
+        </div>
+        {% else %}
+        <div class="alert alert-warning">
+            <strong>⏰ Certificate Expiring Soon</strong><br>
+            Your certificate will expire in {{ days_remaining }} day{{ days_remaining|pluralize }}.
+        </div>
+        {% endif %}
+
+        <div class="highlight">
+            <strong>Certificate Details:</strong><br>
+            Company: {{ member.company_name }}<br>
+            Expiry Date: {{ expiry_date|date:"F d, Y" }}<br>
+            Status: {{ member.certificate_status_display }}
+        </div>
+
+        {% if custom_message %}
+        <div style="margin: 20px 0;">
+            <strong>Message from Administration:</strong><br>
+            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 10px;">
+                {{ custom_message|linebreaks }}
+            </div>
+        </div>
+        {% else %}
+        <div style="margin: 20px 0;">
+            {% if email_type == 'expired' %}
+            <p>We hope this message finds you well.</p>
+            <p>This is to inform you that your certificate has expired. To continue enjoying our services and maintain your membership status, please contact our administration office immediately to renew your certificate.</p>
+            <p>Your prompt attention to this matter is highly appreciated.</p>
+            {% else %}
+            <p>We hope this message finds you well.</p>
+            <p>This is a friendly reminder that your certificate is set to expire in {{ days_remaining }} day{{ days_remaining|pluralize }}. To avoid any disruption in your membership status, we kindly urge you to renew your certificate before the expiry date.</p>
+            <p>Please contact our administration office to complete your renewal process.</p>
+            <p>Thank you for your continued partnership with us.</p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="contact-info">
+            <strong>Contact Information:</strong><br>
+            Email: <a href="mailto:redanenugu@gmail.com">redanenugu@gmail.com</a><br>
+            Phone: +234 [Your Phone Number]<br>
+            Office Address: [Your Office Address]<br>
+            Office Hours: Monday - Friday, 9:00 AM - 5:00 PM
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="mailto:redanenugu@gmail.com?subject=Certificate%20Renewal%20Request" class="btn">
+                Contact Us for Renewal
+            </a>
+        </div>
+
+        <div class="footer">
+            <p><strong>Important Notes:</strong></p>
+            <ul>
+                <li>Please ensure all required documents are ready for renewal</li>
+                <li>Renewal fees may apply - contact our office for current rates</li>
+                <li>Early renewal is encouraged to avoid service interruption</li>
+                <li>This is an automated notification - please do not reply to this email</li>
+            </ul>
+            
+            <hr style="margin: 20px 0;">
+            
+            <p style="text-align: center; font-size: 12px; color: #999;">
+                <strong>REDAN Enugu State Chapter</strong><br>
+                Real Estate Developers Association of Nigeria<br>
+                This email was sent to {{ member.company_email }}<br>
+                Generated on {{ current_date|date:"F d, Y" }} at {{ current_time|time:"g:i A" }}
+            </p>
+        </div>
+    </div>
+</body>
+</html>

@@ -43,6 +43,11 @@ from .helper import admin_required, admin_or_secretary_required, secretary_requi
 
 
 
+from .utils.email_utils import send_certificate_expiry_email, send_bulk_certificate_emails, get_default_email_message
+import json
+
+
+
 
 
 # Create your views here.
@@ -355,6 +360,64 @@ def user(request):
 
 # =========MEMBERSHIP===========
 
+# @login_required
+# def members_list(request):
+#     """List all members with search and filter functionality"""
+#     members = Member.objects.all()
+    
+#     # Search functionality
+#     search_query = request.GET.get('search', '')
+#     if search_query:
+#         members = members.filter(
+#             Q(company_name__icontains=search_query) |
+#             Q(rc_no__icontains=search_query) |
+#             Q(address__icontains=search_query) |
+#             Q(md_phone_number__icontains=search_query)
+#         )
+    
+#     # Filter by certificate status
+#     status_filter = request.GET.get('status', '')
+#     if status_filter == 'expired':
+#         members = members.filter(certificate_expiry_date__lt=timezone.now().date())
+#     elif status_filter == 'expiring':
+#         members = members.filter(
+#             certificate_expiry_date__lte=timezone.now().date() + timedelta(days=30),
+#             certificate_expiry_date__gte=timezone.now().date()
+#         )
+#     elif status_filter == 'valid':
+#         members = members.filter(certificate_expiry_date__gt=timezone.now().date() + timedelta(days=30))
+    
+#     # Filter by category
+#     category_filter = request.GET.get('category', '')
+#     if category_filter:
+#         members = members.filter(company_category=category_filter)
+    
+#     # Pagination
+#     paginator = Paginator(members, 10)
+#     page_number = request.GET.get('page')
+#     members_page = paginator.get_page(page_number)
+    
+#     context = {
+#         'members': members_page,
+#         'search_query': search_query,
+#         'status_filter': status_filter,
+#         'category_filter': category_filter,
+#     }
+#     return render(request, 'user/members_list.html', context)
+
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from django.db.models import Q
+from django.core.paginator import Paginator
+from django.utils import timezone
+from datetime import timedelta
+from .models import Member
+from .utils.email_utils import send_certificate_expiry_email, send_bulk_certificate_emails
+
 @login_required
 def members_list(request):
     """List all members with search and filter functionality"""
@@ -387,6 +450,15 @@ def members_list(request):
     if category_filter:
         members = members.filter(company_category=category_filter)
     
+    # Calculate email statistics for bulk actions
+    all_members = Member.objects.filter(
+        certificate_expiry_date__isnull=False,
+        company_email__isnull=False
+    ).exclude(company_email='')
+    
+    expiring_count = len([m for m in all_members if m.is_certificate_expiring_soon])
+    expired_count = len([m for m in all_members if m.is_certificate_expired])
+    
     # Pagination
     paginator = Paginator(members, 10)
     page_number = request.GET.get('page')
@@ -397,8 +469,69 @@ def members_list(request):
         'search_query': search_query,
         'status_filter': status_filter,
         'category_filter': category_filter,
+        'expiring_count': expiring_count,
+        'expired_count': expired_count,
     }
     return render(request, 'user/members_list.html', context)
+
+@login_required
+def send_individual_email(request, member_id):
+    """Send individual email to a member"""
+    member = get_object_or_404(Member, id=member_id)
+    
+    if not member.company_email:
+        messages.error(request, f'No email address found for {member.company_name}')
+        return redirect('members_list')
+    
+    try:
+        success = send_certificate_expiry_email(member)
+        if success:
+            messages.success(request, f'Email sent successfully to {member.company_name}')
+        else:
+            messages.error(request, f'Failed to send email to {member.company_name}')
+    except Exception as e:
+        messages.error(request, f'Error sending email: {str(e)}')
+    
+    return redirect('members_list')
+
+@login_required
+def send_bulk_email(request):
+    """Send bulk emails to expiring or expired members"""
+    email_type = request.GET.get('type')
+    
+    if email_type not in ['expiring', 'expired']:
+        messages.error(request, 'Invalid email type specified')
+        return redirect('members_list')
+    
+    # Get members with email addresses
+    members_with_emails = Member.objects.filter(
+        certificate_expiry_date__isnull=False,
+        company_email__isnull=False
+    ).exclude(company_email='')
+    
+    if email_type == 'expiring':
+        target_members = [m for m in members_with_emails if m.is_certificate_expiring_soon]
+        email_subject = 'expiring'
+    else:  # expired
+        target_members = [m for m in members_with_emails if m.is_certificate_expired]
+        email_subject = 'expired'
+    
+    if not target_members:
+        messages.warning(request, f'No members found with {email_type} certificates')
+        return redirect('members_list')
+    
+    try:
+        success_count, failed_count = send_bulk_certificate_emails(target_members, email_subject)
+        
+        if success_count > 0:
+            messages.success(request, f'Successfully sent {success_count} emails to {email_type} members')
+        if failed_count > 0:
+            messages.warning(request, f'Failed to send {failed_count} emails')
+            
+    except Exception as e:
+        messages.error(request, f'Error sending bulk emails: {str(e)}')
+    
+    return redirect('members_list')
 
 
 @login_required
@@ -473,6 +606,7 @@ def member_detail(request, member_id):
 
 
 @login_required
+@admin_required
 def edit_member(request, member_id):
     """Edit member information"""
     member = get_object_or_404(Member, id=member_id)
@@ -548,6 +682,7 @@ def edit_member(request, member_id):
 
 
 @login_required
+@admin_required 
 def delete_member(request, member_id):
     """Delete a member"""
     member = get_object_or_404(Member, id=member_id)
@@ -755,6 +890,7 @@ def edit_income(request, income_id):
         'members': Member.objects.filter(company_name__isnull=False).order_by('company_name')
     }
     return render(request, 'user/edit_income.html', context)
+
 @login_required
 def delete_income(request, income_id):
     """Delete income record"""
@@ -1648,3 +1784,139 @@ def secretary_dashboard(request):
 def print_invoice(request, income_id):
     income = get_object_or_404(Income, id=income_id)
     return render(request, 'user/invoice_template.html', {'income': income})
+
+
+
+
+
+
+
+
+
+
+@login_required
+@admin_required
+def send_individual_email(request, member_id):
+    """Send individual email to a specific member"""
+    member = get_object_or_404(Member, id=member_id)
+    
+    if not member.company_email:
+        messages.error(request, f"Member {member.company_name} has no email address.")
+        return redirect('members_list')
+    
+    if request.method == 'POST':
+        custom_message = request.POST.get('custom_message', '').strip()
+        
+        success, message = send_certificate_expiry_email(member, custom_message)
+        
+        if success:
+            messages.success(request, f"Email sent successfully to {member.company_name}")
+        else:
+            messages.error(request, f"Failed to send email: {message}")
+        
+        return redirect('members_list')
+    
+    # GET request - show email form
+    email_type = "expired" if member.is_certificate_expired else "expiring"
+    default_message = get_default_email_message(email_type, member)
+    
+    context = {
+        'member': member,
+        'email_type': email_type,
+        'default_message': default_message,
+    }
+    
+    return render(request, 'emails/send_individual.html', context)
+
+
+@login_required
+@admin_required
+def send_bulk_email(request):
+    """Send bulk emails to multiple members"""
+    if request.method == 'POST':
+        email_type = request.POST.get('email_type')  # 'expiring' or 'expired'
+        custom_message = request.POST.get('custom_message', '').strip()
+        
+        # Get appropriate members based on email type
+        if email_type == 'expiring':
+            members = Member.objects.filter(
+                certificate_expiry_date__isnull=False,
+                company_email__isnull=False
+            ).exclude(company_email='')
+            members = [m for m in members if m.is_certificate_expiring_soon]
+        elif email_type == 'expired':
+            members = Member.objects.filter(
+                certificate_expiry_date__isnull=False,
+                company_email__isnull=False
+            ).exclude(company_email='')
+            members = [m for m in members if m.is_certificate_expired]
+        else:
+            messages.error(request, "Invalid email type selected.")
+            return redirect('members_list')
+        
+        if not members:
+            messages.warning(request, f"No members found with {email_type} certificates.")
+            return redirect('members_list')
+        
+        # Send bulk emails
+        results = send_bulk_certificate_emails(members, custom_message)
+        
+        # Show results
+        success_count = len(results['success'])
+        failed_count = len(results['failed'])
+        
+        if success_count > 0:
+            messages.success(request, f"Successfully sent {success_count} emails.")
+        
+        if failed_count > 0:
+            messages.error(request, f"Failed to send {failed_count} emails.")
+        
+        return redirect('members_list')
+    
+    # GET request - show bulk email form
+    email_type = request.GET.get('type', 'expiring')
+    
+    # Get sample member for default message
+    if email_type == 'expiring':
+        members = Member.objects.filter(certificate_expiry_date__isnull=False)
+        sample_member = next((m for m in members if m.is_certificate_expiring_soon), None)
+    else:
+        members = Member.objects.filter(certificate_expiry_date__isnull=False)
+        sample_member = next((m for m in members if m.is_certificate_expired), None)
+    
+    default_message = get_default_email_message(email_type, sample_member)
+    
+    context = {
+        'email_type': email_type,
+        'default_message': default_message,
+    }
+    
+    return render(request, 'emails/send_bulk.html', context)
+
+
+@login_required
+@admin_required
+@require_http_methods(["GET"])
+def get_email_preview(request):
+    """AJAX endpoint to get email preview"""
+    member_id = request.GET.get('member_id')
+    email_type = request.GET.get('email_type', 'expiring')
+    
+    try:
+        member = Member.objects.get(id=member_id) if member_id else None
+        default_message = get_default_email_message(email_type, member)
+        
+        return JsonResponse({
+            'success': True,
+            'message': default_message
+        })
+    except Member.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'Member not found'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })

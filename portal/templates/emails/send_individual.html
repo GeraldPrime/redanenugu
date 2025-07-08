@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Send Individual Email</title>
+    <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"> -->
+    <link rel="shortcut icon" href="/static/frontend/images/redanlogo.jpg">
+    <link
+      rel="shortcut icon"
+      href="/static/frontend/images/redanlogo.jpg"
+      type="image/x-icon"
+    />
+
+    <!-- Daterangepicker css -->
+    <link rel="stylesheet" href="/static/users/assets/vendor/daterangepicker/daterangepicker.css">
+
+    <!-- Vector Map css -->
+    <link rel="stylesheet"
+        href="/static/users/assets/vendor/admin-resources/jquery.vectormap/jquery-jvectormap-1.2.2.css">
+
+    <!-- Theme Config Js -->
+    <script src="/static/users/assets/js/config.js"></script>
+
+    <!-- App css -->
+    <link href="/static/users/assets/css/app.min.css" rel="stylesheet" type="text/css" id="app-style" />
+
+    <!-- Icons css -->
+    <link href="/static/users/assets/css/icons.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+    <div class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Send Email to {{ member.company_name }}</h5>
+                            <a href="{% url 'members_list' %}" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-arrow-left"></i> Back
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Member Info -->
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-info-circle"></i> Member Information</h6>
+                            <p class="mb-1"><strong>Company:</strong> {{ member.company_name }}</p>
+                            <p class="mb-1"><strong>Email:</strong> {{ member.company_email }}</p>
+                            <p class="mb-1"><strong>Status:</strong> 
+                                <span class="{{ member.certificate_status_class }}">
+                                    {{ member.certificate_status_display }}
+                                </span>
+                            </p>
+                            <p class="mb-0"><strong>Expiry Date:</strong> {{ member.certificate_expiry_date|date:"M d, Y" }}</p>
+                        </div>
+
+                        <!-- Email Form -->
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="custom_message" class="form-label">Email Message</label>
+                                <textarea class="form-control" 
+                                          id="custom_message" 
+                                          name="custom_message" 
+                                          rows="12" 
+                                          placeholder="Enter your custom message...">{{ default_message }}</textarea>
+                                <div class="form-text">
+                                    You can edit this message before sending. The message will be sent as plain text.
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between">
+                                <button type="button" class="btn btn-secondary" onclick="resetMessage()">
+                                    <i class="fas fa-undo"></i> Reset to Default
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane"></i> Send Email
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const defaultMessage = {{ default_message|escapejs }};
+        
+        function resetMessage() {
+            document.getElementById('custom_message').value = defaultMessage;
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

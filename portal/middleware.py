@@ -36,8 +36,8 @@ class SecretaryAdminMiddleware:
                     'members_list',
                     'create_member',
                     'member_detail',
-                    'edit_member',
-                    'delete_member',
+                    # 'edit_member',
+                    # 'delete_member',
                     'renew_certificate',
                     
                 ]

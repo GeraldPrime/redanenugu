@@ -8,7 +8,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from .models import (
     Member, Income, Expense, CompanyBalance, Gallery, 
-    ExecutiveCouncil, FormUpload, SecretaryAdmin
+    ExecutiveCouncil, FormUpload, SecretaryAdmin, Category
 )
 
 
@@ -384,6 +384,17 @@ class CustomAdminSite(admin.AdminSite):
         })
         
         return super().index(request, extra_context)
+    
+
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'code') # Fields to display in the list view
+    search_fields = ('name', 'code') # Fields to search by
+    ordering = ('name',) # Default ordering for the list
+
+# If you prefer the older way of registering (less common now but still works):
+# admin.site.register(Category, CategoryAdmin)
 
 
 # Uncomment the following lines if you want to use the custom admin site

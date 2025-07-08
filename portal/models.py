@@ -12,6 +12,15 @@ def upload_md_picture(instance, filename):
 def upload_certificate_picture(instance, filename):
     return f'members/certificates/{instance.id}_{filename}'
 
+class Category(models.Model):
+    code = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=100)
+    
+    def __str__(self):
+        return self.name
+
+
+
 class Member(models.Model):
     # Company Categories Choices
     CATEGORY_CHOICES = [
@@ -20,12 +29,16 @@ class Member(models.Model):
         ('neighbourhood_estate', 'Neighbourhood Estate'),
         ('engineering_construction', 'Engineering/Construction'),
         ('surveying', 'Surveying'),
+        ('contractor', 'Contractor'),
+        ('realtor', 'Realtor'),
+        ('student', 'Student'),
     ]
     
     # Basic Company Information
     company_name = models.CharField(max_length=200, blank=True, null=True)
     company_email = models.EmailField(max_length=254, verbose_name="Company Email", blank=True, null=True)
     company_category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, verbose_name="Company Category", blank=True, null=True)
+    # company_category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
     address = models.TextField(blank=True, null=True)
     rc_no = models.CharField(max_length=50, unique=True, verbose_name="RC Number", blank=True, null=True)
     md_phone_number = models.CharField(max_length=20, verbose_name="MD Phone Number", blank=True, null=True)
@@ -60,6 +73,11 @@ class Member(models.Model):
     def get_category_display_name(self):
         """Get human-readable category name"""
         return dict(self.CATEGORY_CHOICES).get(self.company_category, 'Unknown')
+    
+    # @property
+    # def get_category_display_name(self):
+    #     """Get human-readable category name"""
+    #     return self.company_category.name if self.company_category else 'Unknown'
     
     @property
     def is_certificate_expiring_soon(self):

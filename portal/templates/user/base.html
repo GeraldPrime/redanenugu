@@ -5,6 +5,7 @@
     <meta charset="utf-8" />
     <title>{% block titile %} {% endblock titile %}</title>
     {% load user_tags %}
+    {% load humanize %}
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta content="A fully featured admin theme which can be used to build CRM, CMS, etc." name="description" />
     <meta content="Coderthemes" name="author" />
@@ -307,6 +308,15 @@
             <a href="{% url 'financial_report' %}" class="side-nav-link">
                 <i class="ri-file-chart-line"></i>
                 <span>Financial Report</span>
+            </a>
+        </li>
+
+        <li class="side-nav-title">Emailing Service</li>
+
+        <li class="side-nav-item">
+            <a href="{% url 'financial_dashboard' %}" class="side-nav-link">
+                <i class="ri-dashboard-line"></i>
+                <span>Expiring/Expired</span>
             </a>
         </li>
 
