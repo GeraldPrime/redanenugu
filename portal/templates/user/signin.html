@@ -2,6 +2,7 @@
 <html lang="en">
 
     <head>
+        {% load static %}
         <meta charset="utf-8" />
         <title>Log In | Powerx - Bootstrap 5 Admin & Dashboard Template</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,7 +10,13 @@
         <meta content="Coderthemes" name="author" />
 
         <!-- App favicon -->
-        <link rel="shortcut icon" href="/static/users/assets/images/favicon.ico">
+
+        <link rel="shortcut icon" href="/static/frontend/images/redanlogo.jpg">
+        <link
+        rel="shortcut icon"
+        href="/static/frontend/images/redanlogo.jpg"
+        type="image/x-icon"
+        />
         
         <!-- Theme Config Js -->
         <script src="/static/users/assets/js/config.js"></script>
@@ -23,7 +30,7 @@
         <!-- Custom CSS for background image -->
         <style>
             body {
-                background-image: url('/static/frontend/images/office-buildings-with-modern-architecture.jpg');
+                background-image: url("{% static 'frontend/images/office-buildings-with-modern-architecture.jpg' %}");
                 background-size: cover;
                 background-position: center;
                 background-repeat: no-repeat;
@@ -62,10 +69,10 @@
                             <div class="card bg-transparent mb-0">
                             <!-- Logo-->
                             <div class="auth-brand">
-                                <a href="index.html" class="logo-light">
+                                <a  class="logo-light">
                                     <img src="/static/frontend/images/redanlogo.jpg" alt="logo" height="40">
                                 </a>
-                                <a href="index.html" class="logo-dark">
+                                <a class="logo-dark">
                                     <img src="/static/frontend/images/redanlogo.jpg" alt="dark logo" height="40">
                                 </a>
                             </div>
