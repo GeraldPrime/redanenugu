@@ -14,10 +14,10 @@ def send_certificate_expiry_email(member, custom_message=None):
         
         # Determine email type based on certificate status
         if member.is_certificate_expired:
-            subject = "Urgent: Certificate Renewal Required"
+            subject = "Urgent: REDAN Enugu Certificate Renewal Required"
             email_type = "expired"
         elif member.is_certificate_expiring_soon:
-            subject = "Certificate Renewal Reminder"
+            subject = "REDAN Enugu Certificate Renewal Reminder"
             email_type = "expiring"
         else:
             return False, "Certificate is not expiring or expired"
@@ -86,7 +86,7 @@ def send_bulk_certificate_emails(members, custom_message=None):
 def get_default_email_message(email_type, member=None):
     """Get default email message based on type"""
     if email_type == "expired":
-        return f"""Dear {member.company_name if member else '[Company Name]'},
+        return f"""Dear {'REDAN Member' if member else '[Company Name]'},
 
 We hope this message finds you well.
 
@@ -100,7 +100,7 @@ Administration Team"""
     
     elif email_type == "expiring":
         days_text = f"{member.days_until_expiry} days" if member and member.days_until_expiry else "[X days]"
-        return f"""Dear {member.company_name if member else '[Company Name]'},
+        return f"""Dear {'REDAN Member' if member else '[Company Name]'},
 
 We hope this message finds you well.
 

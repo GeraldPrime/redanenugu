@@ -113,7 +113,8 @@
     <div class="content">
         <h2>Certificate Renewal Notification</h2>
         
-        <p>Dear {{ company_name }},</p>
+        <!-- <p>Dear {{ company_name }},</p> -->
+        <p>Dear {{ member.company_name }}</p>
         
         {% if email_type == 'expired' %}
         <div class="alert alert-danger">
@@ -136,7 +137,7 @@
 
         {% if custom_message %}
         <div style="margin: 20px 0;">
-            <strong>Message from Administration:</strong><br>
+            <strong>Message from the Administration:</strong><br>
             <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 10px;">
                 {{ custom_message|linebreaks }}
             </div>
@@ -159,8 +160,9 @@
         <div class="contact-info">
             <strong>Contact Information:</strong><br>
             Email: <a href="mailto:redanenugu@gmail.com">redanenugu@gmail.com</a><br>
-            Phone: +234 [Your Phone Number]<br>
-            Office Address: [Your Office Address]<br>
+            Phone: +234 803 400 4558<br>
+            Phone: +234 901 551 1285<br>
+            Office Address: Plot 151A Independence Layout Avenue, by Ibusa Bustop, Enugu.<br>
             Office Hours: Monday - Friday, 9:00 AM - 5:00 PM
         </div>
 
@@ -173,7 +175,6 @@
         <div class="footer">
             <p><strong>Important Notes:</strong></p>
             <ul>
-                <li>Please ensure all required documents are ready for renewal</li>
                 <li>Renewal fees may apply - contact our office for current rates</li>
                 <li>Early renewal is encouraged to avoid service interruption</li>
                 <li>This is an automated notification - please do not reply to this email</li>

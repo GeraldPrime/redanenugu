@@ -1933,6 +1933,7 @@ def get_email_preview(request):
 
 
 @login_required
+@admin_required
 def send_email_to_members(request):
     """View to display email form and handle sending emails to all members"""
     
@@ -1966,6 +1967,7 @@ def send_email_to_members(request):
     return render(request, 'emails/send_email.html', context)
 
 @login_required
+@admin_required
 @require_http_methods(["GET"])
 def get_member_email_count(request):
     """Get current member email count"""

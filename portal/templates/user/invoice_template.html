@@ -6,69 +6,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Invoice - {{ income.id }}</title>
     
-    <!-- Your existing CSS files -->
     <link rel="shortcut icon" href="/static/frontend/images/redanlogo.jpg">
-    <link href="/static/users/assets/css/app.min.css" rel="stylesheet" type="text/css" id="app-style" />
-    <link href="/static/users/assets/css/icons.min.css" rel="stylesheet" type="text/css" />
-    
-    <!-- Bootstrap for layout -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <style>
-        /* Print Styles */
-        @media print {
-            .no-print { display: none !important; }
-            .print-only { display: block !important; }
-            body {
-                background: white !important;
-                color: black !important;
-                font-size: 12px !important;
-                margin: 0 !important;
-            }
-            .invoice-container {
-                box-shadow: none !important;
-                border: none !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                max-width: none !important;
-            }
-            .page-break { page-break-after: always; }
+        /* Reset and Base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
         
-        /* Base Styles */
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Arial', sans-serif;
             background-color: #f8f9fa;
             color: #333;
-            line-height: 1.6;
-            margin: 0;
+            line-height: 1.5;
+            font-size: 14px;
             padding: 20px;
         }
         
         .invoice-container {
+            background: white;
             max-width: 800px;
             margin: 0 auto;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
-            overflow: hidden;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         
-        /* Header Section */
+        /* Header */
         .invoice-header {
-            background: #ffffff;
+            background: #2c3e50;
+            color: white;
             padding: 30px;
-            border-bottom: 2px solid #e9ecef;
             text-align: center;
         }
         
         .company-logo {
-            width: 100px;
-            height: 100px;
-            margin: 0 auto 20px;
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 15px;
             border-radius: 50%;
-            background: #f8f9fa;
-            border: 3px solid #007bff;
+            background: white;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -76,107 +55,106 @@
         }
         
         .company-logo img {
-            width: 80px;
-            height: 80px;
+            width: 50px;
+            height: 50px;
             object-fit: cover;
             border-radius: 50%;
         }
         
-        .company-logo i {
-            font-size: 40px;
-            color: #007bff;
+        .invoice-header h1 {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
         }
         
-        .company-info h1 {
-            font-size: 28px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 5px;
+        .invoice-header .subtitle {
+            font-size: 16px;
+            margin-bottom: 8px;
         }
         
-        .company-info p {
-            color: #666;
-            margin-bottom: 3px;
+        .invoice-header .contact-info {
+            font-size: 13px;
+            opacity: 0.9;
         }
         
         .invoice-title {
-            background: #007bff;
-            color: white;
-            padding: 15px 30px;
-            margin: 20px 0;
-            border-radius: 5px;
-            font-size: 24px;
-            font-weight: 600;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            margin: 15px auto 0;
+            border-radius: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            display: inline-block;
         }
         
-        /* Invoice Details */
+        /* Content sections */
+        .content-section {
+            padding: 25px;
+            border-bottom: 1px solid #eee;
+        }
+        
         .invoice-details {
-            padding: 30px;
-        }
-        
-        .invoice-meta {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-        }
-        
-        .invoice-meta-item {
-            flex: 1;
-            min-width: 200px;
-            margin-bottom: 15px;
-        }
-        
-        .invoice-meta-item h6 {
-            color: #666;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 5px;
-            font-weight: 600;
-        }
-        
-        .invoice-meta-item p {
-            color: #333;
-            font-size: 16px;
-            font-weight: 500;
-            margin: 0;
-        }
-        
-        /* Bill To Section */
-        .billing-info {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-        }
-        
-        .billing-section {
-            flex: 1;
-            min-width: 250px;
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
             margin-bottom: 20px;
         }
         
-        .billing-section h5 {
-            color: #333;
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 10px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid #007bff;
+        .invoice-details h4 {
+            margin-bottom: 15px;
+            color: #2c3e50;
         }
         
-        .billing-section p {
-            color: #666;
+        /* Status Badge */
+        .status-badge {
+            background: #27ae60;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        /* Category Badge */
+        .category-badge {
+            background: #3498db;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        /* Address Cards */
+        .address-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .address-card {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .address-card h5 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .address-card p {
             margin-bottom: 5px;
-            line-height: 1.5;
+            font-size: 13px;
         }
         
         /* Items Table */
-        .invoice-items {
-            margin-bottom: 30px;
-        }
-        
         .items-table {
             width: 100%;
             border-collapse: collapse;
@@ -184,29 +162,29 @@
         }
         
         .items-table th {
-            background: #f8f9fa;
-            color: #333;
-            font-weight: 600;
-            padding: 15px;
+            background: #34495e;
+            color: white;
+            padding: 12px;
             text-align: left;
-            border-bottom: 2px solid #dee2e6;
+            font-weight: bold;
         }
         
         .items-table td {
-            padding: 15px;
-            border-bottom: 1px solid #dee2e6;
+            padding: 15px 12px;
+            border-bottom: 1px solid #ddd;
         }
         
-        .items-table tr:hover {
+        .items-table tbody tr:nth-child(even) {
             background: #f8f9fa;
         }
         
         /* Total Section */
         .total-section {
             background: #f8f9fa;
-            padding: 20px;
+            border: 1px solid #ddd;
             border-radius: 5px;
-            margin-top: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
         }
         
         .total-row {
@@ -218,42 +196,52 @@
         
         .total-row.final {
             font-size: 20px;
-            font-weight: 600;
-            color: #007bff;
-            border-top: 2px solid #dee2e6;
+            font-weight: bold;
+            color: #2c3e50;
+            border-top: 2px solid #3498db;
             padding-top: 15px;
             margin-top: 15px;
         }
         
-        /* Category Badge */
-        .category-badge {
-            display: inline-block;
-            padding: 5px 12px;
-            border-radius: 15px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        /* Alert */
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 5px;
         }
         
-        .badge-info { background-color: #17a2b8; color: white; }
-        .badge-warning { background-color: #ffc107; color: #212529; }
-        .badge-success { background-color: #28a745; color: white; }
-        .badge-secondary { background-color: #6c757d; color: white; }
-        .badge-primary { background-color: #007bff; color: white; }
+        .alert-success {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        
+        /* Payment Instructions */
+        .payment-instructions {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #28a745;
+        }
+        
+        .bank-details {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 10px;
+        }
         
         /* Footer */
         .invoice-footer {
             background: #f8f9fa;
-            padding: 20px 30px;
-            border-top: 1px solid #dee2e6;
+            padding: 20px;
             text-align: center;
             color: #666;
-        }
-        
-        .invoice-footer p {
-            margin-bottom: 5px;
-            font-size: 14px;
+            font-size: 12px;
         }
         
         /* Action Buttons */
@@ -264,56 +252,93 @@
             z-index: 1000;
             display: flex;
             gap: 10px;
+            flex-direction: column;
         }
         
         .btn-action {
-            padding: 10px 20px;
+            padding: 10px 15px;
             border: none;
             border-radius: 5px;
-            font-weight: 600;
+            color: white;
             text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s ease;
+            font-size: 13px;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+        
+        .btn-action:hover {
+            opacity: 0.8;
             color: white;
         }
         
-        .btn-print { background: #007bff; }
-        .btn-print:hover { background: #0056b3; color: white; }
+        .btn-print { background: #3498db; }
+        .btn-download { background: #e74c3c; }
+        .btn-back { background: #95a5a6; }
         
-        .btn-download { background: #28a745; }
-        .btn-download:hover { background: #1e7e34; color: white; }
-        
-        .btn-back { background: #6c757d; }
-        .btn-back:hover { background: #545b62; color: white; }
-        
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .invoice-meta, .billing-info {
-                flex-direction: column;
+        /* Print Styles */
+        @media print {
+            .no-print { display: none !important; }
+            
+            body {
+                background: white !important;
+                color: black !important;
+                font-size: 11pt !important;
+                margin: 0 !important;
+                padding: 0 !important;
             }
             
-            .invoice-meta-item, .billing-section {
-                flex: none;
-                width: 100%;
+            .invoice-container {
+                box-shadow: none !important;
+                border: none !important;
+                margin: 0 !important;
+                max-width: none !important;
+            }
+            
+            .invoice-header {
+                background: #2c3e50 !important;
+                color: white !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            .items-table th {
+                background: #34495e !important;
+                color: white !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            
+            .address-section {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .content-section {
+                padding: 15px;
+            }
+            
+            .invoice-header {
+                padding: 20px;
+            }
+            
+            .invoice-header h1 {
+                font-size: 20px;
             }
             
             .action-buttons {
                 position: relative;
                 top: auto;
                 right: auto;
-                margin-bottom: 20px;
+                margin-bottom: 15px;
+                flex-direction: row;
                 justify-content: center;
-            }
-            
-            .items-table {
-                font-size: 14px;
-            }
-            
-            .items-table th,
-            .items-table td {
-                padding: 10px 8px;
             }
         }
     </style>
@@ -322,13 +347,13 @@
     <!-- Action Buttons -->
     <div class="action-buttons no-print">
         <button onclick="window.print()" class="btn-action btn-print">
-            <i class="ri-printer-line"></i> Print
+            Print
         </button>
         <button onclick="downloadPDF()" class="btn-action btn-download">
-            <i class="ri-download-line"></i> Download PDF
+            Download PDF
         </button>
         <a href="{% url 'income_list' %}" class="btn-action btn-back">
-            <i class="ri-arrow-left-line"></i> Back to List
+            Back to List
         </a>
     </div>
 
@@ -336,16 +361,15 @@
         <!-- Invoice Header -->
         <div class="invoice-header">
             <div class="company-logo">
-                <!-- Replace with your company logo -->
-                <img src="/static/frontend/images/redanlogo.jpg" alt="Company Logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                <i class="ri-building-line" style="display: none;"></i>
+                <img src="/static/frontend/images/redanlogo.jpg" alt="REDAN Logo" onerror="this.style.display='none';">
             </div>
             
-            <div class="company-info">
-                <h1>REAL ESTATE DEVELOPERS OF NIGERIA <br>(REDAN)</h1>
-                <p>Enugu State Chapter</p>
-                <!-- <p>City, State, ZIP Code</p> -->
-                <p>Phone: (+234) 803 400 4558 | Email: redanenugu@gmail.com</p>
+            <h1>REAL ESTATE DEVELOPERS ASSOCIATION OF NIGERIA</h1>
+            <div class="subtitle">REDAN - Enugu State Chapter</div>
+            <div class="contact-info">
+                <p>Plot 151A Independence Layout Avenue, by Ibusa Bustop, Enugu</p>
+                <p>Phone1: (+234) 803 400 4558 | Phone2: (+234) 901 551 1285</p>
+                <p>Email: redanenugu@gmail.com</p>
             </div>
             
             <div class="invoice-title">
@@ -353,90 +377,104 @@
             </div>
         </div>
 
-        <!-- Invoice Details -->
-        <div class="invoice-details">
-            <!-- Invoice Meta Information -->
-            <div class="invoice-meta">
-                <div class="invoice-meta-item">
-                    <h6>Invoice Date</h6>
-                    <p>{{ income.date|date:"F d, Y" }}</p>
+        <!-- Invoice Content -->
+        <div class="content-section">
+            <!-- Company Info and Status -->
+            <div class="row align-items-center mb-4">
+                <div class="col-md-8">
+                    <h3>REAL ESTATE DEVELOPERS ASSOCIATION OF NIGERIA</h3>
+                    <p class="text-muted">Enugu State Chapter - Professional Real Estate Development</p>
                 </div>
-                <div class="invoice-meta-item">
-                    <h6>Invoice ID</h6>
-                    <p>#{{ income.id|stringformat:"04d" }}</p>
-                </div>
-                <div class="invoice-meta-item">
-                    <h6>Category</h6>
-                    <p>
-                        {% if income.category == 'national_rebate' %}
-                            <span class="category-badge badge-info">{{ income.get_category_display }}</span>
-                        {% elif income.category == 'enugu_validation' %}
-                            <span class="category-badge badge-warning">{{ income.get_category_display }}</span>
-                        {% elif income.category == 'donations' %}
-                            <span class="category-badge badge-success">{{ income.get_category_display }}</span>
-                        {% elif income.category == 'other_sources' %}
-                            <span class="category-badge badge-secondary">{{ income.get_category_display }}</span>
-                        {% else %}
-                            <span class="category-badge badge-primary">{{ income.get_category_display }}</span>
-                        {% endif %}
-                    </p>
-                </div>
-                <div class="invoice-meta-item">
-                    <h6>Status</h6>
-                    <p><span class="category-badge badge-success">PAID</span></p>
+                <div class="col-md-4 text-md-end">
+                    <span class="status-badge">PAID</span>
+                    <p class="mt-2 mb-0"><strong>Date:</strong> {{ income.date|date:"F d, Y" }}</p>
                 </div>
             </div>
 
-            <!-- Billing Information -->
-            <div class="billing-info">
-                <div class="billing-section">
-                    <h5>Bill From</h5>
-                    <p><strong>REDAN Enugu</strong></p>
-                    <p>Enugu state</p>
-                    <!-- <p>City, State, ZIP Code</p> -->
+            <!-- Invoice Details -->
+            <div class="invoice-details">
+                <h4>Invoice Details</h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Invoice Date:</strong> {{ income.date|date:"F d, Y" }}</p>
+                        <p><strong>Invoice ID:</strong> #{{ income.id|stringformat:"04d" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Category:</strong> 
+                            <span class="category-badge">{{ income.get_category_display }}</span>
+                        </p>
+                        <p><strong>Amount:</strong> <span class="text-primary fs-5 fw-bold">₦{{ income.amount|floatformat:2|intcomma }}</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Address Cards -->
+            <div class="address-section">
+                <div class="address-card">
+                    <h5>From:</h5>
+                    <p><strong>REDAN Enugu State Chapter</strong></p>
+                    <p>Plot 151A Independence Layout Avenue</p>
+                    <p>By Ibusa Bustop, Enugu</p>
                     <p>Phone: (+234) 803 400 4558</p>
                     <p>Email: redanenugu@gmail.com</p>
                 </div>
                 
-                <div class="billing-section">
-                    <h5>Bill To</h5>
-                    <p><strong>{{ income.payer_name|default:"N/A" }}</strong></p>
-                    {% if income.payer_address %}
-                        <p>{{ income.payer_address }}</p>
-                    {% endif %}
-                    {% if income.payer_phone %}
-                        <p>Phone: {{ income.payer_phone }}</p>
-                    {% endif %}
-                    {% if income.payer_email %}
-                        <p>Email: {{ income.payer_email }}</p>
+                <div class="address-card">
+                    <h5>To:</h5>
+                    {% if income.category == 'enugu_validation' and income.payer_member %}
+                        <p><strong>{{ income.payer_member.company_name }}</strong></p>
+                        {% if income.payer_member.address %}
+                            <p>{{ income.payer_member.address }}</p>
+                        {% endif %}
+                        {% if income.payer_member.phone %}
+                            <p>Phone: {{ income.payer_member.phone }}</p>
+                        {% endif %}
+                        {% if income.payer_member.email %}
+                            <p>Email: {{ income.payer_member.email }}</p>
+                        {% endif %}
+                        {% if income.payer_member.contact_person %}
+                            <p>Contact: {{ income.payer_member.contact_person }}</p>
+                        {% endif %}
+                    {% elif income.payer_name %}
+                        <p><strong>{{ income.payer_name }}</strong></p>
+                        {% if income.payer_address %}
+                            <p>{{ income.payer_address }}</p>
+                        {% endif %}
+                        {% if income.payer_phone %}
+                            <p>Phone: {{ income.payer_phone }}</p>
+                        {% endif %}
+                        {% if income.payer_email %}
+                            <p>Email: {{ income.payer_email }}</p>
+                        {% endif %}
+                    {% else %}
+                        <p><strong>{{ income.get_payer_display }}</strong></p>
+                        <p>Details not available</p>
                     {% endif %}
                 </div>
             </div>
 
             <!-- Invoice Items -->
-            <div class="invoice-items">
-                <table class="items-table">
-                    <thead>
-                        <tr>
-                            <th>Description</th>
-                            <th>Category</th>
-                            <th>Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>
-                                <strong>{{ income.description|default:"Income Payment" }}</strong>
-                                {% if income.notes %}
-                                    <br><small class="text-muted">{{ income.notes }}</small>
-                                {% endif %}
-                            </td>
-                            <td>{{ income.get_category_display }}</td>
-                            <td><strong>₦{{ income.amount|floatformat:2|intcomma }}</strong></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th style="width: 50%;">Description</th>
+                        <th style="width: 25%;">Category</th>
+                        <th style="width: 25%;" class="text-end">Amount (₦)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <strong>{{ income.description|default:"Income Payment" }}</strong>
+                            {% if income.notes %}
+                                <br><small class="text-muted">{{ income.notes }}</small>
+                            {% endif %}
+                        </td>
+                        <td>{{ income.get_category_display }}</td>
+                        <td class="text-end"><strong>₦{{ income.amount|floatformat:2|intcomma }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
 
             <!-- Total Section -->
             <div class="total-section">
@@ -453,13 +491,37 @@
                     <span>₦{{ income.amount|floatformat:2|intcomma }}</span>
                 </div>
             </div>
+
+            <!-- Payment Status Alert -->
+            <div class="alert alert-success">
+                <strong>Payment Confirmed:</strong> This invoice has been successfully paid and processed. Thank you for your business with REDAN Enugu State Chapter.
+            </div>
+
+            <!-- Payment Instructions -->
+            <div class="payment-instructions">
+                <h5>Payment Information</h5>
+                <p>For future payments, please use the following details and reference your invoice number:</p>
+                <div class="bank-details">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <p><strong>Bank:</strong> Access Bank</p>
+                            <p><strong>Account Name:</strong> REDAN Enugu State Chapter</p>
+                        </div>
+                        <div class="col-sm-6">
+                            <p><strong>Account Number:</strong> 0123456789</p>
+                            <p><strong>Reference:</strong> {{ income.id|stringformat:"04d" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Invoice Footer -->
         <div class="invoice-footer">
-            <p><strong>Thank you for your business!</strong></p>
+            <p><strong>Thank you for your business with REDAN!</strong></p>
             <p>Generated on {{ "now"|date:"F d, Y H:i" }}</p>
             <p>This is an electronically generated invoice and does not require a signature.</p>
+            <p><em>Real Estate Developers Association of Nigeria - Enugu State Chapter</em></p>
         </div>
     </div>
 
@@ -472,23 +534,23 @@
             actionButtons.style.display = 'none';
             
             const element = document.querySelector('.invoice-container');
+            const invoiceId = '{{ income.id|stringformat:"04d" }}';
+            const today = new Date().toISOString().slice(0,10);
+            
             const opt = {
                 margin: 0.5,
-                filename: `invoice_${document.querySelector('.invoice-title').textContent.replace('INVOICE #', '').trim()}.pdf`,
+                filename: `REDAN_Invoice_${invoiceId}_${today}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { 
                     scale: 2,
                     useCORS: true,
                     allowTaint: true,
-                    backgroundColor: '#ffffff',
-                    logging: false,
-                    letterRendering: true
+                    backgroundColor: '#ffffff'
                 },
                 jsPDF: { 
                     unit: 'in', 
                     format: 'a4', 
-                    orientation: 'portrait',
-                    compress: true
+                    orientation: 'portrait' 
                 }
             };
 
@@ -498,22 +560,17 @@
             }).catch((error) => {
                 console.error('PDF generation failed:', error);
                 actionButtons.style.display = 'flex';
-                alert('PDF generation failed. Please try again.');
+                alert('PDF generation failed. Please try the print option instead.');
             });
         }
 
-        // Auto-hide action buttons on print
+        // Handle print events
         window.addEventListener('beforeprint', function() {
             document.querySelector('.action-buttons').style.display = 'none';
         });
 
         window.addEventListener('afterprint', function() {
             document.querySelector('.action-buttons').style.display = 'flex';
-        });
-
-        // Ensure proper loading
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Invoice page loaded successfully');
         });
     </script>
 </body>
