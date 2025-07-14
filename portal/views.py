@@ -84,7 +84,74 @@ def contact(request):
 def checkmembers(request):
     return render(request, "frontend/members.html")
 
-
+def search_member(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            search_query = data.get('search_query', '').strip()
+            
+            if not search_query:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Please enter a search term'
+                })
+            
+            # Search by company name or registration number
+            member = Member.objects.filter(
+                Q(company_name__icontains=search_query) |
+                Q(rc_no__iexact=search_query) |
+                Q(redan_reg_number__iexact=search_query)
+            ).first()
+            
+            if not member:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'No member found with the provided information'
+                })
+            
+            # Check certificate status
+            if member.certificate_status in ['expired', 'no_date']:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Sorry you are not a member, please contact the admin for assistance'
+                })
+            
+            # Prepare member data
+            member_data = {
+                'company_name': member.company_name or 'N/A',
+                'company_categories': member.get_categories_display_string or 'N/A',
+                'md_phone_number': member.md_phone_number or 'N/A',
+                'address': member.address or 'N/A',
+                'company_projects': member.company_projects or 'No projects listed',
+                'md_picture': member.md_picture.url if member.md_picture else None,
+                'project_images': member.project_images.url if member.project_images else None,
+                'certificate_status': member.certificate_status_display,
+                'certificate_status_class': member.certificate_status_class,
+                'days_until_expiry': member.days_until_expiry_display,
+                'rc_no': member.rc_no or 'N/A',
+                'redan_reg_number': member.redan_reg_number or 'N/A'
+            }
+            
+            return JsonResponse({
+                'success': True,
+                'member': member_data
+            })
+            
+        except json.JSONDecodeError:
+            return JsonResponse({
+                'success': False,
+                'message': 'Invalid request format'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': 'An error occurred while searching'
+            })
+    
+    return JsonResponse({
+        'success': False,
+        'message': 'Invalid request method'
+    })
 
 # =======================================================================
 # ======================admin side start ===============================

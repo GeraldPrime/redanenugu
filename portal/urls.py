@@ -13,7 +13,9 @@ urlpatterns = [
     path('redantv/', views.redantv, name='redantv'),
     path('downloadables/', views.downloadables, name='downloadables'),
     path('contact/', views.contact, name='contact'),
+    # path('checkmembers/', views.checkmembers, name='checkmembers'),
     path('checkmembers/', views.checkmembers, name='checkmembers'),
+    path('search-member/', views.search_member, name='search_member'),
     
     # =======================================================================
 # ======================admin side start ===============================

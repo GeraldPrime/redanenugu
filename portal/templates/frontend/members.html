@@ -1,49 +1,425 @@
+
+
 {% extends 'frontend/base.html' %}
+{% load static %}
 
 {% block content %}
-  
+<div class="site-blocks-cover overlay inner-page" style="background-image: url(/static/frontend/images/member-log-membership-username-password-concept.jpg);" data-aos="fade"
+  data-stellar-background-ratio="0.5">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-md-10">
+        <span class="sub-text">Membership</span>
+        <h1>Check For REDAN Enugu Membership</h1>
+      </div>
+    </div>
+  </div>
+</div>
 
-
-    <div class="site-blocks-cover overlay inner-page" style="background-image: url(/static/frontend/images/member-log-membership-username-password-concept.jpg);" data-aos="fade"
-      data-stellar-background-ratio="0.5">
-      <div class="container">
-        <div class="row align-items-center">
-          <div class="col-md-10">
-            <span class="sub-text">Membership</span>
-            <h1>Check For REDAN Enugu Membership</h1>
+<div class="site-section">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12 text-center mb-5">
+        <h2 class="font-weight-bold text-black mb-3">Search Member Information</h2>
+        <p class="text-muted">Enter your company name or Registration No. to check your membership status</p>
+      </div>
+    </div>
+   
+    <div class="row justify-content-center mb-5">
+      <div class="col-md-8 col-lg-6">
+        <div class="card border-0 shadow-lg">
+          <div class="card-body p-5">
+            <form id="searchForm">
+              {% csrf_token %}
+              <div class="form-group mb-4">
+                <label for="searchInput" class="form-label font-weight-bold text-dark mb-3">Search by Company Name or Registration No.</label>
+                <input type="text" class="form-control form-control-lg border-2" id="searchInput"
+                       placeholder="Enter company name or registration No...." required>
+              </div>
+              <div class="text-center">
+                <button type="submit" class="btn btn-primary btn-lg px-5 py-3 font-weight-bold" id="searchBtn">
+                  <span id="searchBtnText">Search Member</span>
+                  <div id="searchSpinner" class="spinner-border spinner-border-sm ms-2" role="status" style="display: none;">
+                    <span class="sr-only">Loading...</span>
+                  </div>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="site-section">
-      <div class="container">
-        <div class="row">
-          <div class="col-12 text-center mb-4">
-            <h2 class="font-weight-bold text-black mb-3">Search Member Information</h2>
-            <p class="text-muted">Enter your company name or registration ID to check your membership status</p>
+    <!-- Search Results Section -->
+    <div class="row" id="searchResults" style="display: none;">
+      <div class="col-12">
+        <!-- Error Message -->
+        <div class="alert alert-danger alert-dismissible fade show" id="errorMessage" style="display: none;">
+          <div class="d-flex align-items-center">
+            <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+            <div>
+              <h5 class="alert-heading mb-1">Access Denied</h5>
+              <span id="errorText"></span>
+            </div>
           </div>
         </div>
-        
-        <div class="row justify-content-center">
-          <div class="col-md-8 col-lg-6">
-            <div class="card border-0 shadow-sm">
-              <div class="card-body p-4">
-                <form>
-                  <div class="form-group mb-3">
-                    <label for="searchInput" class="form-label font-weight-bold">Search by Company Name or Registration ID</label>
-                    <input type="text" class="form-control form-control-lg" id="searchInput" 
-                           placeholder="Enter company name or registration ID...">
+
+        <!-- Member Information Card -->
+        <div class="card border-0 shadow-lg" id="memberCard" style="display: none;">
+          <div class="card-header bg-gradient-primary text-white py-4">
+            <div class="d-flex align-items-center">
+              <i class="fas fa-building fa-2x me-3"></i>
+              <div>
+                <h3 class="mb-0 font-weight-bold">Member Information</h3>
+                <p class="mb-0 opacity-75">Verified REDAN Enugu Member</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card-body p-0">
+            <!-- Member Details Section -->
+            <div class="bg-light p-5">
+              <div class="row align-items-center">
+                <!-- MD Picture Column -->
+                <div class="col-md-3 text-center mb-4 mb-md-0">
+                  <div class="member-photo-container">
+                    <img id="mdPicture" src="" alt="MD Picture" class="img-fluid shadow-lg" 
+                         style="width: 250px; height: 300px; object-fit: cover; border-radius: 10px; display: none;">
                   </div>
-                  <div class="text-center">
-                    <button type="submit" class="btn btn-primary btn-lg px-5">Search Member</button>
+                </div>
+
+                <!-- Company Information Column -->
+                <div class="col-md-9">
+                  <div class="row">
+                    <div class="col-lg-6 mb-4">
+                      <div class="info-item">
+                        <h6 class="text-primary font-weight-bold mb-2">
+                          <i class="fas fa-building me-2"></i>Company Name
+                        </h6>
+                        <p class="h5 text-dark mb-0" id="companyName"></p>
+                      </div>
+                    </div>
+                    <div class="col-lg-6 mb-4">
+                      <div class="info-item">
+                        <h6 class="text-primary font-weight-bold mb-2">
+                          <i class="fas fa-tags me-2"></i>Company Category
+                        </h6>
+                        <p class="h5 text-dark mb-0" id="companyCategory"></p>
+                      </div>
+                    </div>
+                    <div class="col-lg-6 mb-4">
+                      <div class="info-item">
+                        <h6 class="text-primary font-weight-bold mb-2">
+                          <i class="fas fa-phone me-2"></i>MD Phone Number
+                        </h6>
+                        <p class="h5 text-dark mb-0" id="mdPhoneNumber"></p>
+                      </div>
+                    </div>
+                    <div class="col-lg-6 mb-4">
+                      <div class="info-item">
+                        <h6 class="text-primary font-weight-bold mb-2">
+                          <i class="fas fa-certificate me-2"></i>Certificate Status
+                        </h6>
+                        <span id="certificateStatus" class="badge badge-lg"></span>
+                      </div>
+                    </div>
                   </div>
-                </form>
+                </div>
+              </div>
+            </div>
+
+            <!-- Additional Information Section -->
+            <div class="p-5">
+              <div class="row">
+                <div class="col-lg-6 mb-4">
+                  <div class="info-section">
+                    <h6 class="text-primary font-weight-bold mb-3">
+                      <i class="fas fa-map-marker-alt me-2"></i>Company Address
+                    </h6>
+                    <div class="bg-light p-3 rounded">
+                      <p class="mb-0 text-dark" id="address"></p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-lg-6 mb-4">
+                  <div class="info-section">
+                    <h6 class="text-primary font-weight-bold mb-3">
+                      <i class="fas fa-file-alt me-2"></i>Registration Details
+                    </h6>
+                    <div class="bg-light p-3 rounded">
+                      <div class="row">
+                        <div class="col-6">
+                          <small class="text-muted">RC Number</small>
+                          <p class="mb-2 font-weight-bold" id="rcNumber"></p>
+                        </div>
+                        <div class="col-6">
+                          <small class="text-muted">REDAN Reg. Number</small>
+                          <p class="mb-0 font-weight-bold" id="redanRegNumber"></p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Projects Section -->
+              <div class="row">
+                <div class="col-12 mb-4">
+                  <div class="info-section">
+                    <h6 class="text-primary font-weight-bold mb-3">
+                      <i class="fas fa-project-diagram me-2"></i>Company Projects
+                    </h6>
+                    <div class="bg-light p-4 rounded">
+                      <p id="companyProjects" class="mb-0 text-dark line-height-relaxed"></p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Project Images Section -->
+              <div class="row" id="projectImagesSection" style="display: none;">
+                <div class="col-12">
+                  <div class="info-section">
+                    <h6 class="text-primary font-weight-bold mb-3">
+                      <i class="fas fa-images me-2"></i>Project Images
+                    </h6>
+                    <div class="text-center bg-light p-4 rounded">
+                      <img id="projectImages" src="" alt="Project Images" class="img-fluid rounded shadow-lg" 
+                           style="max-height: 500px; max-width: 100%; border-radius: 10px;">
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<style>
+  .bg-gradient-primary {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  }
+  
+  .member-photo-container {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .info-item {
+    transition: transform 0.2s ease;
+  }
+  
+  .info-item:hover {
+    transform: translateY(-2px);
+  }
+  
+  .info-section {
+    transition: all 0.3s ease;
+  }
+  
+  .card {
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  .card:hover {
+    transform: translateY(-5px);
+  }
+  
+  .alert {
+    animation: slideIn 0.5s ease-in-out;
+  }
+  
+  @keyframes slideIn {
+    from { 
+      opacity: 0; 
+      transform: translateY(-20px); 
+    }
+    to { 
+      opacity: 1; 
+      transform: translateY(0); 
+    }
+  }
+  
+  .spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+  }
+  
+  .form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  }
+  
+  .badge-lg {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+  }
+  
+  .line-height-relaxed {
+    line-height: 1.8;
+  }
+  
+  .opacity-75 {
+    opacity: 0.75;
+  }
+  
+  .shadow-lg {
+    box-shadow: 0 1rem 3rem rgba(0,0,0,.175) !important;
+  }
+  
+  .border-2 {
+    border-width: 2px !important;
+  }
+  
+  .container-fluid {
+    padding-left: 3rem;
+    padding-right: 3rem;
+  }
+  
+    
+    .member-photo-container {
+      position: relative;
+      display: inline-block;
+    
+  @media (max-width: 768px) {
+    .container-fluid {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+    
+    .member-photo-container img {
+      width: 200px;
+      height: 240px;
+    }
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchForm = document.getElementById('searchForm');
+    const searchBtn = document.getElementById('searchBtn');
+    const searchBtnText = document.getElementById('searchBtnText');
+    const searchSpinner = document.getElementById('searchSpinner');
+    const searchResults = document.getElementById('searchResults');
+    const errorMessage = document.getElementById('errorMessage');
+    const memberCard = document.getElementById('memberCard');
+    const searchInput = document.getElementById('searchInput');
+
+    searchForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const searchQuery = searchInput.value.trim();
+        if (!searchQuery) {
+            showError('Please enter a search term');
+            return;
+        }
+
+        // Show loading state
+        searchBtn.disabled = true;
+        searchBtnText.textContent = 'Searching...';
+        searchSpinner.style.display = 'inline-block';
+        
+        // Hide previous results
+        searchResults.style.display = 'none';
+        errorMessage.style.display = 'none';
+        memberCard.style.display = 'none';
+
+        // Get CSRF token
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        // Make AJAX request
+        fetch('{% url "search_member" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                'search_query': searchQuery
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayMemberInfo(data.member);
+            } else {
+                showError(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showError('An error occurred while searching. Please try again.');
+        })
+        .finally(() => {
+            // Reset button state
+            searchBtn.disabled = false;
+            searchBtnText.textContent = 'Search Member';
+            searchSpinner.style.display = 'none';
+        });
+    });
+
+    function showError(message) {
+        document.getElementById('errorText').textContent = message;
+        errorMessage.style.display = 'block';
+        searchResults.style.display = 'block';
+        memberCard.style.display = 'none';
+        
+        // Smooth scroll to results
+        setTimeout(() => {
+            searchResults.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+    }
+
+    function displayMemberInfo(member) {
+        // Update member information
+        document.getElementById('companyName').textContent = member.company_name;
+        document.getElementById('companyCategory').textContent = member.company_categories;
+        document.getElementById('mdPhoneNumber').textContent = member.md_phone_number;
+        document.getElementById('address').textContent = member.address;
+        document.getElementById('companyProjects').textContent = member.company_projects;
+        document.getElementById('rcNumber').textContent = member.rc_no;
+        document.getElementById('redanRegNumber').textContent = member.redan_reg_number;
+        
+        // Update certificate status
+        const certificateStatus = document.getElementById('certificateStatus');
+        certificateStatus.textContent = member.certificate_status;
+        certificateStatus.className = member.certificate_status_class + ' badge-lg';
+
+        // Handle MD picture - Simplified
+        const mdPicture = document.getElementById('mdPicture');
+        
+        if (member.md_picture && member.md_picture.trim() !== '') {
+            mdPicture.src = member.md_picture;
+            mdPicture.style.display = 'block';
+        } else {
+            mdPicture.style.display = 'none';
+        }
+
+        // Handle project images
+        const projectImagesSection = document.getElementById('projectImagesSection');
+        const projectImages = document.getElementById('projectImages');
+        
+        if (member.project_images && member.project_images.trim() !== '') {
+            projectImages.src = member.project_images;
+            projectImagesSection.style.display = 'block';
+        } else {
+            projectImagesSection.style.display = 'none';
+        }
+
+        // Show member card
+        errorMessage.style.display = 'none';
+        memberCard.style.display = 'block';
+        searchResults.style.display = 'block';
+        
+        // Smooth scroll to results
+        setTimeout(() => {
+            searchResults.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+    }
+});
+</script>
 
 {% endblock content %}
