@@ -58,27 +58,81 @@
             </div>
 
             <div class="row">
-              <div class="col-md-6">
+              <div class="col-md-12">
                 <div class="form-group">
-                  <label for="company_category">Company Category <span class="text-danger">*</span></label>
-                  <select class="form-control" id="company_category" name="company_category" required>
-                    <option value="">Select Category</option>
-                    <option value="building_development" {% if member.company_category == 'building_development' %}selected{% endif %}>Building Development</option>
-                    <option value="site_and_services" {% if member.company_category == 'site_and_services' %}selected{% endif %}>Site and Services</option>
-                    <option value="neighbourhood_estate" {% if member.company_category == 'neighbourhood_estate' %}selected{% endif %}>Neighbourhood Estate</option>
-                    <option value="engineering_construction" {% if member.company_category == 'engineering_construction' %}selected{% endif %}>Engineering/Construction</option>
-                    <option value="surveying" {% if member.company_category == 'surveying' %}selected{% endif %}>Surveying</option>
-                    <option value="contractor" {% if member.company_category == 'contractor' %}selected{% endif %}>Contractor</option>
-                    <option value="realtor" {% if member.company_category == 'realtor' %}selected{% endif %}>Realtor</option>
-                    <option value="student" {% if member.company_category == 'student' %}selected{% endif %}>Student</option>
-                    9
-                  </select>
+                  <label>Company Categories <span class="text-danger">*</span></label>
+                  <div class="border rounded p-3">
+                    <div class="row">
+                      <div class="col-md-4">
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" name="company_categories" value="building_development" id="cat_building_development" {% if 'building_development' in member.get_categories_list %}checked{% endif %}>
+                          <label class="form-check-label" for="cat_building_development">Building Development</label>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" name="company_categories" value="site_and_services" id="cat_site_and_services" {% if 'site_and_services' in member.get_categories_list %}checked{% endif %}>
+                          <label class="form-check-label" for="cat_site_and_services">Site and Services</label>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" name="company_categories" value="neighbourhood_estate" id="cat_neighbourhood_estate" {% if 'neighbourhood_estate' in member.get_categories_list %}checked{% endif %}>
+                          <label class="form-check-label" for="cat_neighbourhood_estate">Neighbourhood Estate</label>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="row mt-2">
+                      <div class="col-md-4">
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" name="company_categories" value="engineering_construction" id="cat_engineering_construction" {% if 'engineering_construction' in member.get_categories_list %}checked{% endif %}>
+                          <label class="form-check-label" for="cat_engineering_construction">Engineering/Construction</label>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" name="company_categories" value="surveying" id="cat_surveying" {% if 'surveying' in member.get_categories_list %}checked{% endif %}>
+                          <label class="form-check-label" for="cat_surveying">Surveying</label>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" name="company_categories" value="contractor" id="cat_contractor" {% if 'contractor' in member.get_categories_list %}checked{% endif %}>
+                          <label class="form-check-label" for="cat_contractor">Contractor</label>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="row mt-2">
+                      <div class="col-md-4">
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" name="company_categories" value="realtor" id="cat_realtor" {% if 'realtor' in member.get_categories_list %}checked{% endif %}>
+                          <label class="form-check-label" for="cat_realtor">Realtor</label>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" name="company_categories" value="student" id="cat_student" {% if 'student' in member.get_categories_list %}checked{% endif %}>
+                          <label class="form-check-label" for="cat_student">Student</label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <small class="form-text text-muted">Select all categories that apply to this company</small>
                 </div>
               </div>
+            </div>
+
+            <div class="row">
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="rc_no">RC Number <span class="text-danger">*</span></label>
                   <input type="text" class="form-control" id="rc_no" name="rc_no" value="{{ member.rc_no }}" required>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="md_phone_number">MD Phone Number <span class="text-danger">*</span></label>
+                  <input type="tel" class="form-control" id="md_phone_number" name="md_phone_number" value="{{ member.md_phone_number }}" required>
                 </div>
               </div>
             </div>
@@ -86,15 +140,6 @@
             <div class="form-group">
               <label for="address">Address <span class="text-danger">*</span></label>
               <textarea class="form-control" id="address" name="address" rows="3" required>{{ member.address }}</textarea>
-            </div>
-
-            <div class="row">
-              <div class="col-md-6">
-                <div class="form-group">
-                  <label for="md_phone_number">MD Phone Number <span class="text-danger">*</span></label>
-                  <input type="tel" class="form-control" id="md_phone_number" name="md_phone_number" value="{{ member.md_phone_number }}" required>
-                </div>
-              </div>
             </div>
 
             <!-- Current Images Display -->
@@ -242,5 +287,17 @@
       document.getElementById('certificate_expiry_display').value = expiry.toLocaleDateString('en-US', options);
     }
   }
+  
+  // Validate at least one category is selected
+  document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+      const checkboxes = document.querySelectorAll('input[name="company_categories"]:checked');
+      if (checkboxes.length === 0) {
+        e.preventDefault();
+        alert('Please select at least one company category.');
+      }
+    });
+  });
 </script>
 {% endblock %}

@@ -1,3 +1,4 @@
+
 {% extends 'user/base.html' %}
 
 {% block title %}Members List{% endblock %}
@@ -114,7 +115,7 @@
               <thead class="thead-light">
                 <tr>
                   <th>Company Name</th>
-                  <th>Category</th>
+                  <th>Categories</th>
                   <th>RC Number</th>
                   <th>MD Phone</th>
                   <th>Certificate Status</th>
@@ -128,13 +129,21 @@
               <tbody>
                 {% if members %}
                   {% for member in members %}
-                    <tr class="member-row" data-status="{{ member.certificate_status }}" data-company="{{ member.company_name|lower }}" data-rc="{{ member.rc_no|lower }}" data-category="{{ member.company_category }}">
+                    <tr class="member-row" 
+                        data-status="{{ member.certificate_status }}" 
+                        data-company="{{ member.company_name|lower }}" 
+                        data-rc="{{ member.rc_no|lower }}" 
+                        data-categories="{{ member.company_categories|lower }}">
                       <td><strong>{{ member.company_name }}</strong></td>
                       <td>
-                        {% if member.company_category %}
-                          {{ member.get_category_display_name }}
+                        {% if member.company_categories %}
+                          <div class="category-badges">
+                            {% for category in member.get_categories_display %}
+                              <span class="badge badge-info badge-sm mr-1 mb-1">{{ category }}</span>
+                            {% endfor %}
+                          </div>
                         {% else %}
-                          -
+                          <span class="text-muted">-</span>
                         {% endif %}
                       </td>
                       <td>{{ member.rc_no }}</td>
@@ -261,6 +270,28 @@
   </div>
 </div>
 
+<style>
+.category-badges {
+  max-width: 200px;
+}
+
+.badge-sm {
+  font-size: 0.75em;
+  padding: 0.25em 0.4em;
+}
+
+.badge-info {
+  background-color: #17a2b8 !important;
+  color: #fff !important;
+}
+
+.category-badges .badge {
+  display: inline-block;
+  margin-right: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+</style>
+
 <script>
 function filterMembers() {
   const searchValue = document.getElementById('memberSearch').value.toLowerCase();
@@ -271,11 +302,11 @@ function filterMembers() {
     const company = row.dataset.company || '';
     const rc = row.dataset.rc || '';
     const status = row.dataset.status;
-    const category = row.dataset.category;
+    const categories = row.dataset.categories || '';
     
     let show = company.includes(searchValue) || rc.includes(searchValue);
     if (show && statusFilter && status !== statusFilter) show = false;
-    if (show && categoryFilter && category !== categoryFilter) show = false;
+    if (show && categoryFilter && !categories.includes(categoryFilter.toLowerCase())) show = false;
     
     row.style.display = show ? '' : 'none';
   });

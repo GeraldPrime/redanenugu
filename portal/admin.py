@@ -50,93 +50,169 @@ class CertificateStatusFilter(admin.SimpleListFilter):
         return queryset
 
 
+# @admin.register(Member)
+# class MemberAdmin(admin.ModelAdmin):
+#     list_display = [
+#         'company_name', 'company_category', 'rc_no', 'certificate_status_badge',
+#         'days_until_expiry_display', 'last_renewal_date', 'renewal_count', 'created_at'
+#     ]
+#     list_filter = [
+#         'company_category', CertificateStatusFilter, 'last_renewal_date',
+#         'national_first_registered', 'enugu_first_registered', 'created_at'
+#     ]
+#     search_fields = [
+#         'company_name', 'rc_no', 'company_email', 'address', 'md_phone_number'
+#     ]
+#     readonly_fields = [
+#         'certificate_status_badge', 'days_until_expiry_display', 'new_expiry_date',
+#         'created_at', 'updated_at'
+#     ]
+#     fieldsets = (
+#         ('Company Information', {
+#             'fields': (
+#                 'company_name', 'company_email', 'company_category', 
+#                 'address', 'rc_no', 'md_phone_number'
+#             )
+#         }),
+#         ('Media', {
+#             'fields': ('md_picture', 'certificate_picture'),
+#             'classes': ('collapse',)
+#         }),
+#         ('National Membership', {
+#             'fields': ('national_first_registered',)
+#         }),
+#         ('Certificate Information', {
+#             'fields': (
+#                 'certificate_issued_date', 'certificate_expiry_date',
+#                 'certificate_status_badge', 'days_until_expiry_display', 'new_expiry_date'
+#             )
+#         }),
+#         ('Renewal Information', {
+#             'fields': ('last_renewal_date', 'renewal_count')
+#         }),
+#         ('Enugu Membership', {
+#             'fields': ('enugu_first_registered',)
+#         }),
+#         ('Timestamps', {
+#             'fields': ('created_at', 'updated_at'),
+#             'classes': ('collapse',)
+#         })
+#     )
+    
+#     actions = ['renew_certificates', 'mark_as_expired']
+    
+#     def certificate_status_badge(self, obj):
+#         """Display certificate status with colored badge"""
+#         status = obj.certificate_status_display
+#         color_map = {
+#             'Expired': 'red',
+#             'Expiring Soon': 'orange',
+#             'Valid': 'green',
+#             'No Expiry Date': 'gray'
+#         }
+#         color = color_map.get(status, 'gray')
+#         return format_html(
+#             '<span style="color: {}; font-weight: bold;">{}</span>',
+#             color, status
+#         )
+#     certificate_status_badge.short_description = 'Certificate Status'
+    
+#     def renew_certificates(self, request, queryset):
+#         """Admin action to renew certificates"""
+#         renewed_count = 0
+#         for member in queryset:
+#             if member.can_renew_certificate and member.renew_certificate():
+#                 renewed_count += 1
+        
+#         self.message_user(
+#             request,
+#             f"Successfully renewed {renewed_count} certificates."
+#         )
+#     renew_certificates.short_description = "Renew selected certificates"
+    
+#     def mark_as_expired(self, request, queryset):
+#         """Admin action to mark certificates as expired (for testing)"""
+#         from datetime import date
+#         queryset.update(certificate_expiry_date=date.today())
+#         self.message_user(request, "Marked selected certificates as expired.")
+#     mark_as_expired.short_description = "Mark as expired (for testing)"
+
+
 @admin.register(Member)
 class MemberAdmin(admin.ModelAdmin):
     list_display = [
-        'company_name', 'company_category', 'rc_no', 'certificate_status_badge',
-        'days_until_expiry_display', 'last_renewal_date', 'renewal_count', 'created_at'
+        'company_name', 'get_categories_display_string', 'rc_no', 
+        'certificate_status_badge', 'certificate_expiry_date', 'created_at'
     ]
+    
     list_filter = [
-        'company_category', CertificateStatusFilter, 'last_renewal_date',
-        'national_first_registered', 'enugu_first_registered', 'created_at'
+        'company_categories', 'certificate_expiry_date', 'created_at'
     ]
+    
     search_fields = [
-        'company_name', 'rc_no', 'company_email', 'address', 'md_phone_number'
+        'company_name', 'rc_no', 'company_email', 'address'
     ]
+    
     readonly_fields = [
-        'certificate_status_badge', 'days_until_expiry_display', 'new_expiry_date',
+        'certificate_status_badge', 'days_until_expiry_display', 
         'created_at', 'updated_at'
     ]
+    
     fieldsets = (
         ('Company Information', {
             'fields': (
-                'company_name', 'company_email', 'company_category', 
+                'company_name', 'company_email', 'company_categories',
                 'address', 'rc_no', 'md_phone_number'
             )
         }),
-        ('Media', {
-            'fields': ('md_picture', 'certificate_picture'),
-            'classes': ('collapse',)
+        ('Pictures', {
+            'fields': ('md_picture', 'certificate_picture')
         }),
-        ('National Membership', {
-            'fields': ('national_first_registered',)
-        }),
-        ('Certificate Information', {
+        ('Dates', {
             'fields': (
-                'certificate_issued_date', 'certificate_expiry_date',
-                'certificate_status_badge', 'days_until_expiry_display', 'new_expiry_date'
+                'national_first_registered', 'enugu_first_registered',
+                'certificate_issued_date', 'certificate_expiry_date'
             )
         }),
-        ('Renewal Information', {
+        ('Renewal Info', {
             'fields': ('last_renewal_date', 'renewal_count')
         }),
-        ('Enugu Membership', {
-            'fields': ('enugu_first_registered',)
+        ('Status', {
+            'fields': ('certificate_status_badge', 'days_until_expiry_display')
         }),
-        ('Timestamps', {
+        ('System Info', {
             'fields': ('created_at', 'updated_at'),
             'classes': ('collapse',)
         })
     )
     
-    actions = ['renew_certificates', 'mark_as_expired']
+    actions = ['renew_certificates']
     
     def certificate_status_badge(self, obj):
-        """Display certificate status with colored badge"""
+        """Show certificate status with color"""
         status = obj.certificate_status_display
-        color_map = {
+        colors = {
             'Expired': 'red',
-            'Expiring Soon': 'orange',
+            'Expiring Soon': 'orange', 
             'Valid': 'green',
             'No Expiry Date': 'gray'
         }
-        color = color_map.get(status, 'gray')
+        color = colors.get(status, 'gray')
         return format_html(
             '<span style="color: {}; font-weight: bold;">{}</span>',
             color, status
         )
-    certificate_status_badge.short_description = 'Certificate Status'
+    certificate_status_badge.short_description = 'Status'
     
     def renew_certificates(self, request, queryset):
-        """Admin action to renew certificates"""
-        renewed_count = 0
+        """Renew selected certificates"""
+        count = 0
         for member in queryset:
             if member.can_renew_certificate and member.renew_certificate():
-                renewed_count += 1
+                count += 1
         
-        self.message_user(
-            request,
-            f"Successfully renewed {renewed_count} certificates."
-        )
-    renew_certificates.short_description = "Renew selected certificates"
-    
-    def mark_as_expired(self, request, queryset):
-        """Admin action to mark certificates as expired (for testing)"""
-        from datetime import date
-        queryset.update(certificate_expiry_date=date.today())
-        self.message_user(request, "Marked selected certificates as expired.")
-    mark_as_expired.short_description = "Mark as expired (for testing)"
-
+        self.message_user(request, f"Renewed {count} certificates.")
+    renew_certificates.short_description = "Renew certificates"
 
 @admin.register(Income)
 class IncomeAdmin(admin.ModelAdmin):
