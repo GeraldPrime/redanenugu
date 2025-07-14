@@ -1,3 +1,4 @@
+
 {% extends 'user/base.html' %}
 
 {% block title %}Edit {{ member.company_name }}{% endblock %}
@@ -122,6 +123,53 @@
               </div>
             </div>
 
+            <!-- Project Information -->
+            <div class="row mb-4">
+              <div class="col-12">
+                <h5 class="text-primary mb-3">Project Information</h5>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label for="company_projects">Company Projects</label>
+                  <textarea class="form-control" id="company_projects" name="company_projects" rows="4" placeholder="Describe your company's projects (optional)">{{ member.company_projects }}</textarea>
+                  <small class="form-text text-muted">Provide details about your company's projects</small>
+                </div>
+              </div>
+            </div>
+
+            <!-- Current Project Images Display -->
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>Current Project Images:</label>
+                  {% if member.project_images %}
+                    <div class="mb-2">
+                      <img src="{{ member.project_images.url }}" alt="Current Project Images" class="img-thumbnail" style="max-height: 150px;">
+                    </div>
+                  {% else %}
+                    <p class="text-muted">No project images currently uploaded</p>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="project_images">Update Project Images</label>
+                  <input type="file" class="form-control-file" id="project_images" name="project_images" accept="image/*">
+                  <small class="form-text text-muted">Upload new project images (JPEG, PNG) - Optional</small>
+                </div>
+              </div>
+            </div>
+
+            <!-- Basic Details -->
+            <div class="row mb-4">
+              <div class="col-12">
+                <h5 class="text-primary mb-3">Basic Details</h5>
+              </div>
+            </div>
+
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group">
@@ -142,7 +190,7 @@
               <textarea class="form-control" id="address" name="address" rows="3" required>{{ member.address }}</textarea>
             </div>
 
-            <!-- Current Images Display -->
+            <!-- Current Documents Display -->
             <div class="row mb-4">
               <div class="col-12">
                 <h5 class="text-primary mb-3">Current Documents</h5>
@@ -213,6 +261,12 @@
                 <div class="form-group">
                   <label for="national_first_registered">Date of First Year Registered <span class="text-danger">*</span></label>
                   <input type="date" class="form-control" id="national_first_registered" name="national_first_registered" value="{{ member.national_first_registered|date:'Y-m-d' }}" required>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="redan_reg_number">REDAN Reg. Number <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="redan_reg_number" name="redan_reg_number" value="{{ member.redan_reg_number }}" required placeholder="Enter REDAN registration number">
                 </div>
               </div>
             </div>

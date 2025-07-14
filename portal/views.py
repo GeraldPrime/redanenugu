@@ -426,7 +426,8 @@ from .utils.email_utils import send_certificate_expiry_email, send_bulk_certific
 @login_required
 def members_list(request):
     """List all members with search and filter functionality"""
-    members = Member.objects.all()
+    # members = Member.objects.all()
+    members = Member.objects.all().order_by('-created_at')
    
     # Search functionality
     search_query = request.GET.get('search', '')
@@ -480,6 +481,8 @@ def members_list(request):
         'expired_count': expired_count,
     }
     return render(request, 'user/members_list.html', context)
+
+
 @login_required
 def send_individual_email(request, member_id):
     """Send individual email to a member"""
@@ -540,6 +543,7 @@ def send_bulk_email(request):
     return redirect('members_list')
 
 
+
 # @login_required
 # def create_member(request):
 #     """Create a new member"""
@@ -548,11 +552,12 @@ def send_bulk_email(request):
 #             # Get form data
 #             company_name = request.POST.get('company_name')
 #             company_email = request.POST.get('company_email')
-#             company_category = request.POST.get('company_category')
+#             company_categories = request.POST.getlist('company_categories')  # Changed to getlist
 #             address = request.POST.get('address')
 #             rc_no = request.POST.get('rc_no')
 #             md_phone_number = request.POST.get('md_phone_number')
 #             national_first_registered = request.POST.get('national_first_registered')
+#             redan_reg_number = request.POST.get('redan_reg_number')  # New field
 #             certificate_issued_date = request.POST.get('certificate_issued_date')
 #             enugu_first_registered = request.POST.get('enugu_first_registered')
             
@@ -561,10 +566,15 @@ def send_bulk_email(request):
 #             certificate_picture = request.FILES.get('certificate_picture')
             
 #             # Validate required fields
-#             if not all([company_name, company_email, company_category, address, rc_no, md_phone_number, 
-#                        national_first_registered, certificate_issued_date, enugu_first_registered, 
-#                        md_picture, certificate_picture]):
+#             if not all([company_name, company_email, address, rc_no, md_phone_number, 
+#                        national_first_registered, redan_reg_number, certificate_issued_date, 
+#                        enugu_first_registered, md_picture, certificate_picture]):
 #                 messages.error(request, 'All fields are required.')
+#                 return render(request, 'user/create_member.html')
+            
+#             # Validate at least one category is selected
+#             if not company_categories:
+#                 messages.error(request, 'Please select at least one company category.')
 #                 return render(request, 'user/create_member.html')
             
 #             # Check if RC number already exists
@@ -577,17 +587,23 @@ def send_bulk_email(request):
 #                 messages.error(request, 'A member with this email address already exists.')
 #                 return render(request, 'user/create_member.html')
             
+#             # Check if REDAN Reg. Number already exists
+#             if Member.objects.filter(redan_reg_number=redan_reg_number).exists():
+#                 messages.error(request, 'A member with this REDAN registration number already exists.')
+#                 return render(request, 'user/create_member.html')
+            
 #             # Create member
 #             member = Member.objects.create(
 #                 company_name=company_name,
 #                 company_email=company_email,
-#                 company_category=company_category,
+#                 company_categories=','.join(company_categories),  # Join categories with comma
 #                 address=address,
 #                 rc_no=rc_no,
 #                 md_phone_number=md_phone_number,
 #                 md_picture=md_picture,
 #                 certificate_picture=certificate_picture,
 #                 national_first_registered=datetime.strptime(national_first_registered, '%Y-%m-%d').date(),
+#                 redan_reg_number=redan_reg_number,  # New field
 #                 certificate_issued_date=datetime.strptime(certificate_issued_date, '%Y-%m-%d').date(),
 #                 enugu_first_registered=datetime.strptime(enugu_first_registered, '%Y-%m-%d').date(),
 #             )
@@ -610,22 +626,25 @@ def create_member(request):
             company_name = request.POST.get('company_name')
             company_email = request.POST.get('company_email')
             company_categories = request.POST.getlist('company_categories')  # Changed to getlist
+            company_projects = request.POST.get('company_projects')  # New field
             address = request.POST.get('address')
             rc_no = request.POST.get('rc_no')
             md_phone_number = request.POST.get('md_phone_number')
             national_first_registered = request.POST.get('national_first_registered')
+            redan_reg_number = request.POST.get('redan_reg_number')  # New field
             certificate_issued_date = request.POST.get('certificate_issued_date')
             enugu_first_registered = request.POST.get('enugu_first_registered')
             
             # Get uploaded files
             md_picture = request.FILES.get('md_picture')
             certificate_picture = request.FILES.get('certificate_picture')
+            project_images = request.FILES.get('project_images')  # New field
             
             # Validate required fields
             if not all([company_name, company_email, address, rc_no, md_phone_number, 
-                       national_first_registered, certificate_issued_date, enugu_first_registered, 
-                       md_picture, certificate_picture]):
-                messages.error(request, 'All fields are required.')
+                       national_first_registered, redan_reg_number, certificate_issued_date, 
+                       enugu_first_registered, md_picture, certificate_picture]):
+                messages.error(request, 'All required fields must be filled.')
                 return render(request, 'user/create_member.html')
             
             # Validate at least one category is selected
@@ -643,17 +662,25 @@ def create_member(request):
                 messages.error(request, 'A member with this email address already exists.')
                 return render(request, 'user/create_member.html')
             
+            # Check if REDAN Reg. Number already exists
+            if Member.objects.filter(redan_reg_number=redan_reg_number).exists():
+                messages.error(request, 'A member with this REDAN registration number already exists.')
+                return render(request, 'user/create_member.html')
+            
             # Create member
             member = Member.objects.create(
                 company_name=company_name,
                 company_email=company_email,
                 company_categories=','.join(company_categories),  # Join categories with comma
+                company_projects=company_projects,  # New field
                 address=address,
                 rc_no=rc_no,
                 md_phone_number=md_phone_number,
                 md_picture=md_picture,
                 certificate_picture=certificate_picture,
+                project_images=project_images,  # New field
                 national_first_registered=datetime.strptime(national_first_registered, '%Y-%m-%d').date(),
+                redan_reg_number=redan_reg_number,  # New field
                 certificate_issued_date=datetime.strptime(certificate_issued_date, '%Y-%m-%d').date(),
                 enugu_first_registered=datetime.strptime(enugu_first_registered, '%Y-%m-%d').date(),
             )
@@ -668,6 +695,181 @@ def create_member(request):
 
 
 
+# @login_required
+# @admin_required
+# def edit_member(request, member_id):
+#     """Edit member information"""
+#     member = get_object_or_404(Member, id=member_id)
+    
+#     if request.method == 'POST':
+#         try:
+#             # Get form data
+#             company_name = request.POST.get('company_name')
+#             company_email = request.POST.get('company_email')
+#             company_categories = request.POST.getlist('company_categories')  # Changed to getlist
+#             address = request.POST.get('address')
+#             rc_no = request.POST.get('rc_no')
+#             md_phone_number = request.POST.get('md_phone_number')
+#             national_first_registered = request.POST.get('national_first_registered')
+#             redan_reg_number = request.POST.get('redan_reg_number')  # New field
+#             certificate_issued_date = request.POST.get('certificate_issued_date')
+#             enugu_first_registered = request.POST.get('enugu_first_registered')
+            
+#             # Validate required fields
+#             if not all([company_name, company_email, address, rc_no, 
+#                        md_phone_number, national_first_registered, redan_reg_number,
+#                        certificate_issued_date, enugu_first_registered]):
+#                 messages.error(request, 'All fields are required.')
+#                 return render(request, 'user/edit_member.html', {'member': member})
+            
+#             # Validate at least one category is selected
+#             if not company_categories:
+#                 messages.error(request, 'Please select at least one company category.')
+#                 return render(request, 'user/edit_member.html', {'member': member})
+            
+#             # Check if RC number already exists (excluding current member)
+#             if Member.objects.filter(rc_no=rc_no).exclude(id=member_id).exists():
+#                 messages.error(request, 'A member with this RC number already exists.')
+#                 return render(request, 'user/edit_member.html', {'member': member})
+            
+#             # Check if company email already exists (excluding current member)
+#             if Member.objects.filter(company_email=company_email).exclude(id=member_id).exists():
+#                 messages.error(request, 'A member with this email address already exists.')
+#                 return render(request, 'user/edit_member.html', {'member': member})
+            
+#             # Check if REDAN Reg. Number already exists (excluding current member)
+#             if Member.objects.filter(redan_reg_number=redan_reg_number).exclude(id=member_id).exists():
+#                 messages.error(request, 'A member with this REDAN registration number already exists.')
+#                 return render(request, 'user/edit_member.html', {'member': member})
+            
+#             # Update member data
+#             member.company_name = company_name
+#             member.company_email = company_email
+#             member.company_categories = ','.join(company_categories)  # Join categories with comma
+#             member.address = address
+#             member.rc_no = rc_no
+#             member.md_phone_number = md_phone_number
+#             member.national_first_registered = datetime.strptime(
+#                 national_first_registered, '%Y-%m-%d'
+#             ).date()
+#             member.redan_reg_number = redan_reg_number  # New field
+#             member.certificate_issued_date = datetime.strptime(
+#                 certificate_issued_date, '%Y-%m-%d'
+#             ).date()
+#             member.enugu_first_registered = datetime.strptime(
+#                 enugu_first_registered, '%Y-%m-%d'
+#             ).date()
+            
+#             # Update files if provided
+#             if request.FILES.get('md_picture'):
+#                 member.md_picture = request.FILES.get('md_picture')
+#             if request.FILES.get('certificate_picture'):
+#                 member.certificate_picture = request.FILES.get('certificate_picture')
+            
+#             # The model's save method handles certificate expiry date calculation
+#             member.save()
+#             messages.success(request, f'Member "{member.company_name}" updated successfully.')
+#             return redirect('member_detail', member_id=member.id)
+            
+#         except Exception as e:
+#             messages.error(request, f'Error updating member: {str(e)}')
+    
+#     context = {
+#         'member': member,
+#         'today': timezone.now().date()
+#     }
+#     return render(request, 'user/edit_member.html', context)
+
+@login_required
+@admin_required
+def edit_member(request, member_id):
+    """Edit member information"""
+    member = get_object_or_404(Member, id=member_id)
+    
+    if request.method == 'POST':
+        try:
+            # Get form data
+            company_name = request.POST.get('company_name')
+            company_email = request.POST.get('company_email')
+            company_categories = request.POST.getlist('company_categories')  # Changed to getlist
+            company_projects = request.POST.get('company_projects')  # New field
+            address = request.POST.get('address')
+            rc_no = request.POST.get('rc_no')
+            md_phone_number = request.POST.get('md_phone_number')
+            national_first_registered = request.POST.get('national_first_registered')
+            redan_reg_number = request.POST.get('redan_reg_number')  # New field
+            certificate_issued_date = request.POST.get('certificate_issued_date')
+            enugu_first_registered = request.POST.get('enugu_first_registered')
+            
+            # Validate required fields
+            if not all([company_name, company_email, address, rc_no, 
+                       md_phone_number, national_first_registered, redan_reg_number,
+                       certificate_issued_date, enugu_first_registered]):
+                messages.error(request, 'All fields are required.')
+                return render(request, 'user/edit_member.html', {'member': member})
+            
+            # Validate at least one category is selected
+            if not company_categories:
+                messages.error(request, 'Please select at least one company category.')
+                return render(request, 'user/edit_member.html', {'member': member})
+            
+            # Check if RC number already exists (excluding current member)
+            if Member.objects.filter(rc_no=rc_no).exclude(id=member_id).exists():
+                messages.error(request, 'A member with this RC number already exists.')
+                return render(request, 'user/edit_member.html', {'member': member})
+            
+            # Check if company email already exists (excluding current member)
+            if Member.objects.filter(company_email=company_email).exclude(id=member_id).exists():
+                messages.error(request, 'A member with this email address already exists.')
+                return render(request, 'user/edit_member.html', {'member': member})
+            
+            # Check if REDAN Reg. Number already exists (excluding current member)
+            if Member.objects.filter(redan_reg_number=redan_reg_number).exclude(id=member_id).exists():
+                messages.error(request, 'A member with this REDAN registration number already exists.')
+                return render(request, 'user/edit_member.html', {'member': member})
+            
+            # Update member data
+            member.company_name = company_name
+            member.company_email = company_email
+            member.company_categories = ','.join(company_categories)  # Join categories with comma
+            member.company_projects = company_projects  # New field
+            member.address = address
+            member.rc_no = rc_no
+            member.md_phone_number = md_phone_number
+            member.national_first_registered = datetime.strptime(
+                national_first_registered, '%Y-%m-%d'
+            ).date()
+            member.redan_reg_number = redan_reg_number  # New field
+            member.certificate_issued_date = datetime.strptime(
+                certificate_issued_date, '%Y-%m-%d'
+            ).date()
+            member.enugu_first_registered = datetime.strptime(
+                enugu_first_registered, '%Y-%m-%d'
+            ).date()
+            
+            # Update files if provided
+            if request.FILES.get('md_picture'):
+                member.md_picture = request.FILES.get('md_picture')
+            if request.FILES.get('certificate_picture'):
+                member.certificate_picture = request.FILES.get('certificate_picture')
+            if request.FILES.get('project_images'):  # New field
+                member.project_images = request.FILES.get('project_images')
+            
+            # The model's save method handles certificate expiry date calculation
+            member.save()
+            messages.success(request, f'Member "{member.company_name}" updated successfully.')
+            return redirect('member_detail', member_id=member.id)
+            
+        except Exception as e:
+            messages.error(request, f'Error updating member: {str(e)}')
+    
+    context = {
+        'member': member,
+        'today': timezone.now().date()
+    }
+    return render(request, 'user/edit_member.html', context)
+
+
 @login_required
 def member_detail(request, member_id):
     """View member details"""
@@ -676,6 +878,8 @@ def member_detail(request, member_id):
         'member': member,
     }
     return render(request, 'user/member_detail.html', context)
+
+
 
 
 # @login_required
@@ -689,7 +893,7 @@ def member_detail(request, member_id):
 #             # Get form data
 #             company_name = request.POST.get('company_name')
 #             company_email = request.POST.get('company_email')
-#             company_category = request.POST.get('company_category')
+#             company_categories = request.POST.getlist('company_categories')  # Changed to getlist
 #             address = request.POST.get('address')
 #             rc_no = request.POST.get('rc_no')
 #             md_phone_number = request.POST.get('md_phone_number')
@@ -698,10 +902,15 @@ def member_detail(request, member_id):
 #             enugu_first_registered = request.POST.get('enugu_first_registered')
             
 #             # Validate required fields
-#             if not all([company_name, company_email, company_category, address, rc_no, 
+#             if not all([company_name, company_email, address, rc_no, 
 #                        md_phone_number, national_first_registered, certificate_issued_date, 
 #                        enugu_first_registered]):
 #                 messages.error(request, 'All fields are required.')
+#                 return render(request, 'user/edit_member.html', {'member': member})
+            
+#             # Validate at least one category is selected
+#             if not company_categories:
+#                 messages.error(request, 'Please select at least one company category.')
 #                 return render(request, 'user/edit_member.html', {'member': member})
             
 #             # Check if RC number already exists (excluding current member)
@@ -717,7 +926,7 @@ def member_detail(request, member_id):
 #             # Update member data
 #             member.company_name = company_name
 #             member.company_email = company_email
-#             member.company_category = company_category
+#             member.company_categories = ','.join(company_categories)  # Join categories with comma
 #             member.address = address
 #             member.rc_no = rc_no
 #             member.md_phone_number = md_phone_number
@@ -737,9 +946,7 @@ def member_detail(request, member_id):
 #             if request.FILES.get('certificate_picture'):
 #                 member.certificate_picture = request.FILES.get('certificate_picture')
             
-#             # REMOVED: Manual certificate expiry date calculation
-#             # The model's save method now handles this intelligently
-            
+#             # The model's save method handles certificate expiry date calculation
 #             member.save()
 #             messages.success(request, f'Member "{member.company_name}" updated successfully.')
 #             return redirect('member_detail', member_id=member.id)
@@ -752,86 +959,6 @@ def member_detail(request, member_id):
 #         'today': timezone.now().date()
 #     }
 #     return render(request, 'user/edit_member.html', context)
-
-
-@login_required
-@admin_required
-def edit_member(request, member_id):
-    """Edit member information"""
-    member = get_object_or_404(Member, id=member_id)
-    
-    if request.method == 'POST':
-        try:
-            # Get form data
-            company_name = request.POST.get('company_name')
-            company_email = request.POST.get('company_email')
-            company_categories = request.POST.getlist('company_categories')  # Changed to getlist
-            address = request.POST.get('address')
-            rc_no = request.POST.get('rc_no')
-            md_phone_number = request.POST.get('md_phone_number')
-            national_first_registered = request.POST.get('national_first_registered')
-            certificate_issued_date = request.POST.get('certificate_issued_date')
-            enugu_first_registered = request.POST.get('enugu_first_registered')
-            
-            # Validate required fields
-            if not all([company_name, company_email, address, rc_no, 
-                       md_phone_number, national_first_registered, certificate_issued_date, 
-                       enugu_first_registered]):
-                messages.error(request, 'All fields are required.')
-                return render(request, 'user/edit_member.html', {'member': member})
-            
-            # Validate at least one category is selected
-            if not company_categories:
-                messages.error(request, 'Please select at least one company category.')
-                return render(request, 'user/edit_member.html', {'member': member})
-            
-            # Check if RC number already exists (excluding current member)
-            if Member.objects.filter(rc_no=rc_no).exclude(id=member_id).exists():
-                messages.error(request, 'A member with this RC number already exists.')
-                return render(request, 'user/edit_member.html', {'member': member})
-            
-            # Check if company email already exists (excluding current member)
-            if Member.objects.filter(company_email=company_email).exclude(id=member_id).exists():
-                messages.error(request, 'A member with this email address already exists.')
-                return render(request, 'user/edit_member.html', {'member': member})
-            
-            # Update member data
-            member.company_name = company_name
-            member.company_email = company_email
-            member.company_categories = ','.join(company_categories)  # Join categories with comma
-            member.address = address
-            member.rc_no = rc_no
-            member.md_phone_number = md_phone_number
-            member.national_first_registered = datetime.strptime(
-                national_first_registered, '%Y-%m-%d'
-            ).date()
-            member.certificate_issued_date = datetime.strptime(
-                certificate_issued_date, '%Y-%m-%d'
-            ).date()
-            member.enugu_first_registered = datetime.strptime(
-                enugu_first_registered, '%Y-%m-%d'
-            ).date()
-            
-            # Update files if provided
-            if request.FILES.get('md_picture'):
-                member.md_picture = request.FILES.get('md_picture')
-            if request.FILES.get('certificate_picture'):
-                member.certificate_picture = request.FILES.get('certificate_picture')
-            
-            # The model's save method handles certificate expiry date calculation
-            member.save()
-            messages.success(request, f'Member "{member.company_name}" updated successfully.')
-            return redirect('member_detail', member_id=member.id)
-            
-        except Exception as e:
-            messages.error(request, f'Error updating member: {str(e)}')
-    
-    context = {
-        'member': member,
-        'today': timezone.now().date()
-    }
-    return render(request, 'user/edit_member.html', context)
-
 
 
 @login_required

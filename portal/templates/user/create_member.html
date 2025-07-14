@@ -1,5 +1,5 @@
- 
- {% extends 'user/base.html' %}
+
+{% extends 'user/base.html' %}
 
 {% block title %}Add New Member{% endblock %}
 
@@ -118,6 +118,24 @@
               </div>
             </div>
 
+            <!-- New Project Fields -->
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="company_projects">Company Projects</label>
+                  <textarea class="form-control" id="company_projects" name="company_projects" rows="4" placeholder="Describe your company's projects (optional)"></textarea>
+                  <small class="form-text text-muted">Provide details about your company's projects</small>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="project_images">Project Images</label>
+                  <input type="file" class="form-control-file" id="project_images" name="project_images" accept="image/*">
+                  <small class="form-text text-muted">Upload project images (JPEG, PNG) - Optional</small>
+                </div>
+              </div>
+            </div>
+
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group">
@@ -176,6 +194,12 @@
                   <input type="date" class="form-control" id="national_first_registered" name="national_first_registered" required>
                 </div>
               </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="redan_reg_number">REDAN Reg. Number <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="redan_reg_number" name="redan_reg_number" required placeholder="Enter REDAN registration number">
+                </div>
+              </div>
             </div>
 
             <!-- Certificate Information -->
@@ -194,7 +218,7 @@
               </div>
               <div class="col-md-6">
                 <div class="form-group">
-                  <label for="certificate_expiry_display">Certificate Expiry Date</label>
+                  <label for="certificate_expiry_display">Certificate Renewal Date</label>
                   <input type="text" class="form-control" id="certificate_expiry_display" readonly placeholder="Will be calculated automatically">
                   <small class="form-text text-muted">Automatically calculated as 1 year from issued date</small>
                 </div>
