@@ -88,17 +88,36 @@ def about(request):
     return render(request, "frontend/about.html", context)
 
 def gallery(request):
-    return render(request, "frontend/gallery.html")
-
+    """Gallery view that fetches images from database"""
+    gallery_images = Gallery.objects.filter(is_active=True).order_by('order', '-created_at')
+    
+    context = {
+        'gallery_images': gallery_images,
+    }
+    
+    return render(request, "frontend/gallery.html", context)
 
 def redantv(request):
     return render(request, "frontend/redanenugutv.html")
 
 
-def downloadables (request):
-    return render(request, "frontend/downloadables.html")
+def downloadables(request):
+    """View to display all available forms for download"""
+    forms = FormUpload.objects.all()
+    context = {
+        'forms': forms
+    }
+    return render(request, "frontend/downloadables.html", context)
 
-
+def download_form(request, form_id):
+    """View to handle form downloads"""
+    form = get_object_or_404(FormUpload, id=form_id)
+    try:
+        response = HttpResponse(form.form_file.read(), content_type='application/octet-stream')
+        response['Content-Disposition'] = f'attachment; filename="{form.form_file.name}"'
+        return response
+    except FileNotFoundError:
+        raise Http404("File not found")
 def contact(request):
     if request.method == 'POST':
         # Get form data

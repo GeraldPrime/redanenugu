@@ -1,9 +1,8 @@
+
+
 {% extends 'frontend/base.html' %}
 
 {% block content %}
-  
-
-
     <div class="site-blocks-cover overlay inner-page" style="background-image: url(/static/frontend/images/forms3.jpg);" data-aos="fade"
       data-stellar-background-ratio="0.5">
       <div class="container">
@@ -26,191 +25,65 @@
           </div>
         </div>
 
-        <!-- Registration Forms Section -->
+        <!-- Dynamic Forms Section -->
+        {% if forms %}
         <div class="row mb-5">
           <div class="col-12">
             <h3 class="font-weight-bold text-primary mb-4">
-              <i class="fas fa-file-alt mr-2"></i>Registration And RenewalForms
+              <i class="fas fa-file-alt mr-2"></i>Available Forms
             </h3>
           </div>
+          {% for form in forms %}
           <div class="col-md-6 col-lg-4 mb-4">
             <div class="card h-100 border-0 shadow-sm">
               <div class="card-body text-center p-4">
                 <div class="mb-3">
-                  <i class="fas fa-file-pdf fa-3x text-danger"></i>
+                  {% if form.file_type == 'PDF' %}
+                    <i class="fas fa-file-pdf fa-3x text-danger"></i>
+                  {% elif form.file_type == 'DOC' or form.file_type == 'DOCX' %}
+                    <i class="fas fa-file-word fa-3x text-primary"></i>
+                  {% elif form.file_type == 'XLS' or form.file_type == 'XLSX' %}
+                    <i class="fas fa-file-excel fa-3x text-success"></i>
+                  {% else %}
+                    <i class="fas fa-file fa-3x text-secondary"></i>
+                  {% endif %}
                 </div>
-                <h5 class="card-title font-weight-bold">Membership Registration Form</h5>
-                <p class="card-text text-muted">Complete this form to begin your REDAN Enugu membership application process.</p>
+                <h5 class="card-title font-weight-bold">{{ form.name }}</h5>
+                <p class="card-text text-muted">
+                  {% if form.description %}
+                    {{ form.description|truncatechars:100 }}
+                  {% else %}
+                    Download this form for REDAN Enugu membership and activities.
+                  {% endif %}
+                </p>
                 <div class="mt-auto">
-                  <a href="//static/frontend/images/forms2.jpg" class="btn btn-primary btn-block" download>
-                    <i class="fas fa-download mr-2"></i>Download PDF
+                  <a href="{% url 'download_form' form.id %}" class="btn btn-primary btn-block" download>
+                    <i class="fas fa-download mr-2"></i>Download {{ form.file_type }}
                   </a>
-                  <small class="text-muted d-block mt-2">File size: 2.5 MB | Updated: Jan 2025</small>
+                  <small class="text-muted d-block mt-2">
+                    {% if form.file_type %}Type: {{ form.file_type }}{% endif %} | 
+                    Updated: {{ form.updated_at|date:"M Y" }}
+                  </small>
                 </div>
               </div>
             </div>
           </div>
-
-          <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card h-100 border-0 shadow-sm">
-              <div class="card-body text-center p-4">
-                <div class="mb-3">
-                  <i class="fas fa-file-word fa-3x text-primary"></i>
-                </div>
-                <h5 class="card-title font-weight-bold">Corporate Membership Form</h5>
-                <p class="card-text text-muted">Registration form specifically designed for corporate and business entities.</p>
-                <div class="mt-auto">
-                  <a href="//static/frontend/images/redanlogo.jpg" class="btn btn-primary btn-block" download>
-                    <i class="fas fa-download mr-2"></i>Download DOCX
-                  </a>
-                  <small class="text-muted d-block mt-2">File size: 1.8 MB | Updated: Jan 2025</small>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card h-100 border-0 shadow-sm">
-              <div class="card-body text-center p-4">
-                <div class="mb-3">
-                  <i class="fas fa-file-excel fa-3x text-success"></i>
-                </div>
-                <h5 class="card-title font-weight-bold">Renewal Form</h5>
-                <p class="card-text text-muted">Form for existing members to renew their annual membership subscription.</p>
-                <div class="mt-auto">
-                  <a href="//static/frontend/images/abt.jpg" class="btn btn-primary btn-block" download>
-                    <i class="fas fa-download mr-2"></i>Download XLSX
-                  </a>
-                  <small class="text-muted d-block mt-2">File size: 1.2 MB | Updated: Dec 2024</small>
-                </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <!-- No Forms Available Message -->
+        <div class="row mb-5">
+          <div class="col-12 text-center">
+            <div class="card border-0 shadow-sm">
+              <div class="card-body p-5">
+                <i class="fas fa-file-alt fa-4x text-muted mb-3"></i>
+                <h4 class="font-weight-bold text-muted mb-3">No Forms Available</h4>
+                <p class="text-muted">There are currently no forms available for download. Please check back later.</p>
               </div>
             </div>
           </div>
         </div>
-
-        <!-- Documents & Guidelines Section -->
-        <!-- <div class="row mb-5">
-          <div class="col-12">
-            <h3 class="font-weight-bold text-primary mb-4">
-              <i class="fas fa-book mr-2"></i>Documents & Guidelines
-            </h3>
-          </div>
-          <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card h-100 border-0 shadow-sm">
-              <div class="card-body text-center p-4">
-                <div class="mb-3">
-                  <i class="fas fa-gavel fa-3x text-warning"></i>
-                </div>
-                <h5 class="card-title font-weight-bold">Constitution & Bylaws</h5>
-                <p class="card-text text-muted">Official constitution and bylaws governing REDAN Enugu operations and member conduct.</p>
-                <div class="mt-auto">
-                  <a href="downloads/redan-constitution-bylaws.pdf" class="btn btn-primary btn-block" download>
-                    <i class="fas fa-download mr-2"></i>Download PDF
-                  </a>
-                  <small class="text-muted d-block mt-2">File size: 3.2 MB | Updated: Nov 2024</small>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card h-100 border-0 shadow-sm">
-              <div class="card-body text-center p-4">
-                <div class="mb-3">
-                  <i class="fas fa-handshake fa-3x text-info"></i>
-                </div>
-                <h5 class="card-title font-weight-bold">Code of Ethics</h5>
-                <p class="card-text text-muted">Professional code of ethics and standards for all REDAN Enugu members.</p>
-                <div class="mt-auto">
-                  <a href="downloads/code-of-ethics.pdf" class="btn btn-primary btn-block" download>
-                    <i class="fas fa-download mr-2"></i>Download PDF
-                  </a>
-                  <small class="text-muted d-block mt-2">File size: 1.5 MB | Updated: Oct 2024</small>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card h-100 border-0 shadow-sm">
-              <div class="card-body text-center p-4">
-                <div class="mb-3">
-                  <i class="fas fa-list-check fa-3x text-secondary"></i>
-                </div>
-                <h5 class="card-title font-weight-bold">Membership Benefits Guide</h5>
-                <p class="card-text text-muted">Comprehensive guide to all benefits and privileges of REDAN Enugu membership.</p>
-                <div class="mt-auto">
-                  <a href="downloads/membership-benefits-guide.pdf" class="btn btn-primary btn-block" download>
-                    <i class="fas fa-download mr-2"></i>Download PDF
-                  </a>
-                  <small class="text-muted d-block mt-2">File size: 2.8 MB | Updated: Jan 2025</small>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div> -->
-
-        <!-- Images & Branding Section -->
-        <!-- <div class="row mb-5">
-          <div class="col-12">
-            <h3 class="font-weight-bold text-primary mb-4">
-              <i class="fas fa-images mr-2"></i>Images & Branding Materials
-            </h3>
-          </div>
-          <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card h-100 border-0 shadow-sm">
-              <div class="card-body text-center p-4">
-                <div class="mb-3">
-                  <i class="fas fa-image fa-3x" style="color: #FF6B6B;"></i>
-                </div>
-                <h5 class="card-title font-weight-bold">Official Logo Package</h5>
-                <p class="card-text text-muted">High-resolution REDAN Enugu logos in various formats for official use.</p>
-                <div class="mt-auto">
-                  <a href="downloads/redan-logo-package.zip" class="btn btn-primary btn-block" download>
-                    <i class="fas fa-download mr-2"></i>Download ZIP
-                  </a>
-                  <small class="text-muted d-block mt-2">File size: 5.4 MB | Formats: PNG, SVG, EPS</small>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card h-100 border-0 shadow-sm">
-              <div class="card-body text-center p-4">
-                <div class="mb-3">
-                  <i class="fas fa-palette fa-3x" style="color: #4ECDC4;"></i>
-                </div>
-                <h5 class="card-title font-weight-bold">Brand Guidelines</h5>
-                <p class="card-text text-muted">Complete brand guidelines including color codes, typography, and usage rules.</p>
-                <div class="mt-auto">
-                  <a href="downloads/brand-guidelines.pdf" class="btn btn-primary btn-block" download>
-                    <i class="fas fa-download mr-2"></i>Download PDF
-                  </a>
-                  <small class="text-muted d-block mt-2">File size: 4.1 MB | Updated: Dec 2024</small>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card h-100 border-0 shadow-sm">
-              <div class="card-body text-center p-4">
-                <div class="mb-3">
-                  <i class="fas fa-camera fa-3x" style="color: #45B7D1;"></i>
-                </div>
-                <h5 class="card-title font-weight-bold">Event Photos Archive</h5>
-                <p class="card-text text-muted">Collection of high-quality photos from recent REDAN Enugu events and activities.</p>
-                <div class="mt-auto">
-                  <a href="downloads/event-photos-2024.zip" class="btn btn-primary btn-block" download>
-                    <i class="fas fa-download mr-2"></i>Download ZIP
-                  </a>
-                  <small class="text-muted d-block mt-2">File size: 12.3 MB | 25+ Photos</small>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div> -->
+        {% endif %}
 
         <!-- Quick Access Section -->
         <div class="row">

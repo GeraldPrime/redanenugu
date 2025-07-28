@@ -11,12 +11,14 @@ urlpatterns = [
     path('about/', views.about, name='about'),
     path('gallery/', views.gallery, name='gallery'),
     path('redantv/', views.redantv, name='redantv'),
-    path('downloadables/', views.downloadables, name='downloadables'),
+    # path('downloadables/', views.downloadables, name='downloadables'),
     path('contact/', views.contact, name='contact'),
     # path('checkmembers/', views.checkmembers, name='checkmembers'),
     path('checkmembers/', views.checkmembers, name='checkmembers'),
     path('search-member/', views.search_member, name='search_member'),
-    
+     path('downloadables/', views.downloadables, name='downloadables'),
+    path('download-form/<int:form_id>/', views.download_form, name='download_form'),
+    # ... other URLs
     # =======================================================================
 # ======================admin side start ===============================
 
