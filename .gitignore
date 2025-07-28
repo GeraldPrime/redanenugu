@@ -1,3 +1,12 @@
 __pycache__/
 *.py[cod]
 *$py.class
+
+
+# Add to your .gitignore file
+*.sqlite3
+*.db
+db.sqlite3
+/media/
+*.env
+.env
