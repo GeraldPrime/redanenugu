@@ -27,6 +27,8 @@ SECRET_KEY = 'django-insecure-r00ohqs2n!63^(v4@f#&tt03+b^gdbmuzo-^@@9%*elrzmmq--
 DEBUG = True
 
 ALLOWED_HOSTS = [
+    'redanenugu.com', 
+    'www.redanenugu.com',
     '31.97.114.61',
     '.onrender.com', 
     'localhost',                  
