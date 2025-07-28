@@ -44,6 +44,7 @@ from .helper import admin_required, admin_or_secretary_required, secretary_requi
 
 
 from .utils.email_utils import send_certificate_expiry_email, send_bulk_certificate_emails, get_default_email_message
+from django.core.mail import send_mail
 import json
 import logging
 
@@ -62,8 +63,29 @@ def home(request):
 
 
 def about(request):
-    return render(request, "frontend/about.html")
-
+    # Get executives by council type, ordered by their display order
+    state_executives = ExecutiveCouncil.objects.filter(
+        council_type='state', 
+        is_active=True
+    ).order_by('order', 'name')
+    
+    zonal_executives = ExecutiveCouncil.objects.filter(
+        council_type='zonal', 
+        is_active=True
+    ).order_by('order', 'name')
+    
+    national_executives = ExecutiveCouncil.objects.filter(
+        council_type='national', 
+        is_active=True
+    ).order_by('order', 'name')
+    
+    context = {
+        'state_executives': state_executives,
+        'zonal_executives': zonal_executives,
+        'national_executives': national_executives,
+    }
+    
+    return render(request, "frontend/about.html", context)
 
 def gallery(request):
     return render(request, "frontend/gallery.html")
@@ -78,8 +100,47 @@ def downloadables (request):
 
 
 def contact(request):
-    return render(request, "frontend/contact.html")
+    if request.method == 'POST':
+        # Get form data
+        fullname = request.POST.get('fullname')
+        email = request.POST.get('email')
+        message = request.POST.get('message')
+        
+        # Validate required fields
+        if not all([fullname, email, message]):
+            messages.error(request, 'Please fill in all fields.')
+            return render(request, 'frontend/contact.html')
+        
+        try:
+            # Email subject and message
+            subject = f'New Contact Form Message from {fullname}'
+            email_message = f"""
+New contact form submission:
 
+Name: {fullname}
+Email: {email}
+
+Message:
+{message}
+            """
+            
+            # Send email
+            send_mail(
+                subject=subject,
+                message=email_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=['redanenugu@gmail.com'],  # Your email to receive messages
+                fail_silently=False,
+            )
+            
+            messages.success(request, 'Thank you for your message! We will get back to you soon.')
+            return redirect('contact')
+            
+        except Exception as e:
+            messages.error(request, 'Sorry, there was an error sending your message. Please try again.')
+            return render(request, 'frontend/contact.html')
+    
+    return render(request, 'frontend/contact.html')
 
 def checkmembers(request):
     return render(request, "frontend/members.html")
