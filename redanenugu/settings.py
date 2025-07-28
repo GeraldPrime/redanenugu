@@ -30,6 +30,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY')
 DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
+# Security settings for production
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_TZ = True
+
+# CSRF Configuration
+CSRF_TRUSTED_ORIGINS = [
+    'https://redanenugu.com',
+    'https://www.redanenugu.com',
+]
+
 ALLOWED_HOSTS = [
     'redanenugu.com', 
     'www.redanenugu.com',
