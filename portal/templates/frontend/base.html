@@ -28,6 +28,197 @@
 
   <link rel="stylesheet" href="{% static 'frontend/css/style.css' %}" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Custom Floating Social Media Styles -->
+    <style>
+      .floating-social {
+        position: fixed;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 9999;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 0 15px 15px 0;
+        padding: 15px 8px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+      }
+
+      .floating-social:hover {
+        transform: translateY(-50%) translateX(5px);
+        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
+      }
+
+      .floating-social .social-icons {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .floating-social .social-icons a {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .floating-social .social-icons a::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        transition: transform 0.3s ease;
+        transform: scale(0);
+        z-index: -1;
+      }
+
+      .floating-social .social-icons a:hover::before {
+        transform: scale(1);
+      }
+
+      .floating-social .social-icons a i {
+        font-size: 20px;
+        z-index: 1;
+        transition: all 0.3s ease;
+      }
+
+      /* Facebook */
+      .floating-social .social-icons a[href*="facebook"] {
+        background: #e3f2fd;
+        color: #1877f2;
+      }
+
+      .floating-social .social-icons a[href*="facebook"]::before {
+        background: #1877f2;
+      }
+
+      .floating-social .social-icons a[href*="facebook"]:hover {
+        color: white;
+        transform: translateY(-2px);
+      }
+
+      /* YouTube */
+      .floating-social .social-icons a[href*="youtube"] {
+        background: #ffebee;
+        color: #ff0000;
+      }
+
+      .floating-social .social-icons a[href*="youtube"]::before {
+        background: #ff0000;
+      }
+
+      .floating-social .social-icons a[href*="youtube"]:hover {
+        color: white;
+        transform: translateY(-2px);
+      }
+
+      /* TikTok */
+      .floating-social .social-icons a[href*="tiktok"] {
+        background: #fce4ec;
+        color: #ff0050;
+      }
+
+      .floating-social .social-icons a[href*="tiktok"]::before {
+        background: linear-gradient(45deg, #ff0050, #00f2ea);
+      }
+
+      .floating-social .social-icons a[href*="tiktok"]:hover {
+        color: white;
+        transform: translateY(-2px);
+      }
+
+      /* WhatsApp */
+      .floating-social .social-icons a[href*="wa.me"] {
+        background: #e8f5e8;
+        color: #25d366;
+      }
+
+      .floating-social .social-icons a[href*="wa.me"]::before {
+        background: #25d366;
+      }
+
+      .floating-social .social-icons a[href*="wa.me"]:hover {
+        color: white;
+        transform: translateY(-2px);
+      }
+
+      /* Tablet responsiveness */
+      @media (max-width: 768px) and (min-width: 481px) {
+        .floating-social {
+          left: -5px;
+          padding: 12px 6px;
+        }
+
+        .floating-social .social-icons a {
+          width: 40px;
+          height: 40px;
+        }
+
+        .floating-social .social-icons a i {
+          font-size: 18px;
+        }
+      }
+
+      /* Mobile phones - make it more compact but still visible */
+      @media (max-width: 480px) {
+        .floating-social {
+          left: -8px;
+          padding: 8px 4px;
+          border-radius: 0 12px 12px 0;
+          top: 40%;
+          transform: translateY(-50%);
+        }
+
+        .floating-social .social-icons {
+          gap: 8px;
+        }
+
+        .floating-social .social-icons a {
+          width: 35px;
+          height: 35px;
+        }
+
+        .floating-social .social-icons a i {
+          font-size: 16px;
+        }
+
+        .floating-social:hover {
+          transform: translateY(-50%) translateX(3px);
+        }
+      }
+
+      /* Extra small screens - make it even more compact */
+      @media (max-width: 360px) {
+        .floating-social {
+          left: -10px;
+          padding: 6px 3px;
+          top: 35%;
+        }
+
+        .floating-social .social-icons {
+          gap: 6px;
+        }
+
+        .floating-social .social-icons a {
+          width: 32px;
+          height: 32px;
+        }
+
+        .floating-social .social-icons a i {
+          font-size: 14px;
+        }
+      }
+    </style>
 </head>
 
 <body>
@@ -82,18 +273,41 @@
       <div class="site-navbar">
         <div class="container py-1">
           <div class="row align-items-center">
-            <div class="col-2">
+            <!-- <div class="col-2">
               <h1 class="mb-0 site-logo d-flex align-items-center">
                 <a class="d-flex align-items-center text-decoration-none">
                   <img src="{% static 'frontend/images/redanlogo.jpg' %}" alt="REDAN Logo" class="logo-img" style="
-                        height: 40px;
+                        height: 60px;
                         width: auto;
                         flex-shrink: 0;
-                        border-radius: 45%;
+                        border-radius: 50%;
                       " />
                   <span class="logo-text" style="margin-left: 8px; white-space: nowrap">REDAN, ENUGU</span>
                 </a>
               </h1>
+            </div> -->
+            <div class="col-2">
+                <h1 class="mb-0 site-logo d-flex align-items-center">
+                    <a class="d-flex align-items-center text-decoration-none">
+                        <img src="{% static 'frontend/images/redanlogo.jpg' %}" alt="REDAN Logo" class="logo-img" style="
+                            height: 60px;
+                            width: auto;
+                            flex-shrink: 0;
+                            border-radius: 50%;
+                        " />
+                        <div style="margin-left: 8px; display: flex; flex-direction: column; justify-content: center;">
+                            <span class="logo-text" style="white-space: nowrap">REDAN, ENUGU</span>
+                            <p style="
+                                font-size: 12px; /* EVEN TINIER - you can adjust down further if needed (e.g., 0.4em, 0.35em) */
+                                margin-top: 0px; /* Bring it right under, no gap */
+                                margin-bottom: 0;
+                                color: #FFFFFF; /* White color */
+                            ">
+                                Real Estate Developers Association of Nigeria, Enugu
+                            </p>
+                        </div>
+                    </a>
+                </h1>
             </div>
 
             <div class="col-10">
@@ -131,6 +345,40 @@
         </div>
       </div>
     </div>
+
+    <!-- Floating Social Media Icons -->
+      <div class="floating-social">
+        <div class="social-icons">
+          <a
+            href="https://www.facebook.com/share/16GftheDjZ/"
+            target="_blank"
+            title="Follow us on Facebook"
+          >
+            <i class="fab fa-facebook-f"></i>
+          </a>
+          <!-- <a
+            href="https://youtube.com/@vaticantv244?si=5MaLBS78_IR_n_aY"
+            target="_blank"
+            title="Subscribe to our YouTube channel"
+          >
+            <i class="fab fa-youtube"></i>
+          </a> -->
+          <!-- <a
+            href="https://www.tiktok.com/@vaticangardenprojects?_t=ZM-8vAqIRJLJ0H&_r=1"
+            target="_blank"
+            title="Follow us on TikTok"
+          >
+            <i class="fab fa-tiktok"></i>
+          </a> -->
+          <a 
+            href="https://wa.me/2348091647093"  08091647093
+            target="_blank"
+            title="Chat with us on WhatsApp"
+          >
+            <i class="fab fa-whatsapp"></i>
+          </a>
+        </div>
+      </div>
     
       
 
