@@ -203,7 +203,7 @@ def search_member(request):
                 'md_phone_number': member.md_phone_number or 'N/A',
                 'address': member.address or 'N/A',
                 'company_projects': member.company_projects or 'No projects listed',
-                'md_picture': member.md_picture.url if member.md_picture else None,
+                'md_picture': member.certificate_picture.url if member.certificate_picture else None,
                 'project_images': member.project_images.url if member.project_images else None,
                 'certificate_status': member.certificate_status_display,
                 'certificate_status_class': member.certificate_status_class,
