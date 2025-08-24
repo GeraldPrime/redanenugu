@@ -2215,7 +2215,7 @@ def secretary_dashboard(request):
     return render(request, 'user/secretary_dashboard.html', context)
 
 
-
+@login_required
 def print_invoice(request, income_id):
     income = get_object_or_404(Income, id=income_id)
     return render(request, 'user/invoice_template.html', {'income': income})

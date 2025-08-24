@@ -39,6 +39,7 @@ class SecretaryAdminMiddleware:
                     # 'edit_member',
                     # 'delete_member',
                     'renew_certificate',
+                    'print_invoice',
                     
                 ]
                 
@@ -52,6 +53,7 @@ class SecretaryAdminMiddleware:
                     '/secretary-dashboard/',
                     '/signout/',
                     '/admin/signout/',  # In case you have admin prefix
+                    'invoice/'
                 ]
                 
                 current_path = request.path
