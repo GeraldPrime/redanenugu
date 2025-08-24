@@ -1,5 +1,3 @@
-
-
 {% extends 'frontend/base.html' %}
 {% load static %}
 
@@ -110,17 +108,17 @@
                     <div class="col-lg-6 mb-4">
                       <div class="info-item">
                         <h6 class="text-primary font-weight-bold mb-2">
-                          <i class="fas fa-phone me-2"></i>MD Phone Number
+                          <i class="fas fa-certificate me-2"></i>Certificate Status
                         </h6>
-                        <p class="h5 text-dark mb-0" id="mdPhoneNumber"></p>
+                        <span id="certificateStatus" class="badge badge-lg"></span>
                       </div>
                     </div>
                     <div class="col-lg-6 mb-4">
                       <div class="info-item">
                         <h6 class="text-primary font-weight-bold mb-2">
-                          <i class="fas fa-certificate me-2"></i>Certificate Status
+                          <i class="fas fa-id-card me-2"></i>REDAN Reg. Number
                         </h6>
-                        <span id="certificateStatus" class="badge badge-lg"></span>
+                        <p class="h5 text-dark mb-0" id="redanRegNumber"></p>
                       </div>
                     </div>
                   </div>
@@ -128,41 +126,8 @@
               </div>
             </div>
 
-            <!-- Additional Information Section -->
+            <!-- Projects Section -->
             <div class="p-5">
-              <div class="row">
-                <div class="col-lg-6 mb-4">
-                  <div class="info-section">
-                    <h6 class="text-primary font-weight-bold mb-3">
-                      <i class="fas fa-map-marker-alt me-2"></i>Company Address
-                    </h6>
-                    <div class="bg-light p-3 rounded">
-                      <p class="mb-0 text-dark" id="address"></p>
-                    </div>
-                  </div>
-                </div>
-                <div class="col-lg-6 mb-4">
-                  <div class="info-section">
-                    <h6 class="text-primary font-weight-bold mb-3">
-                      <i class="fas fa-file-alt me-2"></i>Registration Details
-                    </h6>
-                    <div class="bg-light p-3 rounded">
-                      <div class="row">
-                        <div class="col-6">
-                          <small class="text-muted">RC Number</small>
-                          <p class="mb-2 font-weight-bold" id="rcNumber"></p>
-                        </div>
-                        <div class="col-6">
-                          <small class="text-muted">REDAN Reg. Number</small>
-                          <p class="mb-0 font-weight-bold" id="redanRegNumber"></p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Projects Section -->
               <div class="row">
                 <div class="col-12 mb-4">
                   <div class="info-section">
@@ -375,13 +340,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function displayMemberInfo(member) {
-        // Update member information
+        // Update member information (removed sensitive data)
         document.getElementById('companyName').textContent = member.company_name;
         document.getElementById('companyCategory').textContent = member.company_categories;
-        document.getElementById('mdPhoneNumber').textContent = member.md_phone_number;
-        document.getElementById('address').textContent = member.address;
         document.getElementById('companyProjects').textContent = member.company_projects;
-        document.getElementById('rcNumber').textContent = member.rc_no;
         document.getElementById('redanRegNumber').textContent = member.redan_reg_number;
         
         // Update certificate status

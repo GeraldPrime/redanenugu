@@ -1,3 +1,5 @@
+
+
 {% extends 'user/base.html' %}
 
 {% block title %}Financial Report{% endblock %}
@@ -16,6 +18,9 @@
                     </button>
                     <button type="button" class="btn btn-success" onclick="downloadPDF()">
                         <i class="ri-file-pdf-line"></i> Download PDF
+                    </button>
+                    <button type="button" class="btn btn-warning" onclick="sharePDF()">
+                        <i class="ri-share-line"></i> Share Report
                     </button>
                 </div>
             </div>
@@ -251,6 +256,20 @@
     </div>
 </div>
 
+<!-- Loading Modal for Share Operation -->
+<div class="modal fade" id="shareLoadingModal" tabindex="-1" role="dialog" aria-labelledby="shareLoadingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <p class="mt-3 mb-0">Preparing report for sharing...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
 @media print {
     .btn, .card-header .btn-group, #filters-section, .content-page .content .container-fluid .d-flex .btn-group {
@@ -348,6 +367,17 @@
 .table tbody tr:hover {
     background-color: #f8f9fa;
 }
+
+/* Share button specific styling */
+.btn-warning {
+    background-color: #ff9800;
+    border-color: #ff9800;
+}
+
+.btn-warning:hover {
+    background-color: #e68900;
+    border-color: #e68900;
+}
 </style>
 
 <script>
@@ -377,9 +407,7 @@ document.getElementById('end_date').addEventListener('change', function() {
 // PDF Download function
 function downloadPDF() {
   const element = document.getElementById('report-content');
-  //const element = document.querySelector('.content-page');
   
-
   const opt = {
     margin:       0.5,
     filename:     'Financial_Report_{{ current_date|date:"Y_m_d_His" }}.pdf',
@@ -390,5 +418,87 @@ function downloadPDF() {
 
   html2pdf().set(opt).from(element).save();
 }
+
+// Share PDF function
+async function sharePDF() {
+    // Check if Web Share API is supported
+    if (!navigator.share) {
+        alert('Sharing is not supported on this device/browser. Please use the Download PDF button instead.');
+        return;
+    }
+
+    try {
+        // Show loading modal
+        $('#shareLoadingModal').modal('show');
+        
+        const element = document.getElementById('report-content');
+        const filename = 'Financial_Report_{{ current_date|date:"Y_m_d_His" }}.pdf';
+        
+        const opt = {
+            margin: 0.5,
+            filename: filename,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+        };
+
+        // Generate PDF as blob instead of downloading
+        const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
+        
+        // Create a File object from the blob
+        const file = new File([pdfBlob], filename, { 
+            type: 'application/pdf',
+            lastModified: Date.now()
+        });
+
+        // Use Web Share API to share the file
+        await navigator.share({
+            title: 'Financial Report',
+            text: 'Here is my financial report',
+            files: [file]
+        });
+
+        // Hide loading modal after successful share
+        $('#shareLoadingModal').modal('hide');
+        console.log('Report shared successfully');
+        
+    } catch (error) {
+        // Hide loading modal in case of error
+        $('#shareLoadingModal').modal('hide');
+        
+        if (error.name === 'AbortError') {
+            console.log('Share was cancelled by the user');
+        } else if (error.name === 'NotAllowedError') {
+            alert('File sharing is not allowed. Please try downloading the PDF instead.');
+        } else {
+            console.error('Error sharing:', error);
+            alert('Unable to share the report. Please try downloading the PDF instead.');
+        }
+    }
+}
+
+// Fallback for older browsers or when share API is not available
+function fallbackShare() {
+    if (navigator.share) {
+        navigator.share({
+            title: 'Financial Report',
+            text: 'Check out my financial report',
+            url: window.location.href
+        }).then(() => {
+            console.log('Thanks for sharing!');
+        }).catch(console.error);
+    } else {
+        // Fallback to copying URL to clipboard
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            alert('Report URL copied to clipboard! You can now paste it in any app to share.');
+        }).catch(() => {
+            alert('Sharing not supported. Please use the Download PDF button and share manually.');
+        });
+    }
+}
 </script>
+
+<!-- Make sure you have html2pdf library included in your base template -->
+<!-- Add this to your base.html if not already included -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 {% endblock %}

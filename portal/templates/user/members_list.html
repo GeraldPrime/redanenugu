@@ -1,4 +1,5 @@
 
+
 {% extends 'user/base.html' %}
 
 {% block title %}Members List{% endblock %}
@@ -11,9 +12,17 @@
 
       <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Members List</h2>
-        <a href="{% url 'create_member' %}" class="btn btn-success">
-          <i class="ri-add-line"></i> Add New Member
-        </a>
+        <div class="btn-group">
+          <a href="{% url 'create_member' %}" class="btn btn-success">
+            <i class="ri-add-line"></i> Add New Member
+          </a>
+          <button type="button" class="btn btn-info" onclick="window.print()">
+            <i class="ri-printer-line"></i> Print List
+          </button>
+          <button type="button" class="btn btn-primary" onclick="downloadPDF()">
+            <i class="ri-file-pdf-line"></i> Download PDF
+          </button>
+        </div>
       </div>
 
       {% if messages %}
@@ -28,7 +37,7 @@
       {% endif %}
 
       <!-- Bulk Email Actions -->
-      <div class="row mb-4">
+      <div class="row mb-4" id="bulk-actions">
         <div class="col-12">
           <div class="card bg-light">
             <div class="card-body py-3">
@@ -69,8 +78,8 @@
         </div>
       </div>
 
-      <div class="card shadow">
-        <div class="card-header bg-light">
+      <div class="card shadow" id="members-report">
+        <div class="card-header bg-light" id="filters-section">
           <div class="row">
             <div class="col-md-4">
               <div class="input-group">
@@ -109,21 +118,30 @@
           </div>
         </div>
 
-        <div class="card-body p-0">
+        <div class="card-body p-0" id="report-content">
+          <!-- Print Header (visible only in print/PDF) -->
+          <div class="print-header d-none" style="display: none;">
+            <div class="text-center mb-4">
+              <h2>REDAN Enugu Members List</h2>
+              <p>Generated on: {{ current_date|date:"M d, Y g:i A" }}</p>
+              <hr>
+            </div>
+          </div>
+
           <div class="table-responsive">
-            <table class="table table-hover mb-0">
+            <table class="table table-hover mb-0" id="members-table">
               <thead class="thead-light">
                 <tr>
                   <th>Company Name</th>
                   <th>Categories</th>
-                  <th>RC Number</th>
-                  <th>MD Phone</th>
+                  <th class="no-print">RC Number</th>
+                  <th class="no-print">MD Phone</th>
                   <th>Certificate Status</th>
                   <th>Expiry Date</th>
                   <th>Days Left</th>
                   <th>National Reg.</th>
                   <th>Enugu Reg.</th>
-                  <th>Actions</th>
+                  <th class="no-print">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -146,17 +164,17 @@
                           <span class="text-muted">-</span>
                         {% endif %}
                       </td>
-                      <td>{{ member.rc_no }}</td>
-                      <td>{{ member.md_phone_number }}</td>
+                      <td class="no-print">{{ member.rc_no }}</td>
+                      <td class="no-print">{{ member.md_phone_number }}</td>
                       <td>
                         {% if member.certificate_status == 'expired' %}
-                          <span class="badge badge-danger" style="background-color: #dc3545; color: white;">Expired</span>
+                          <span class="badge badge-danger status-badge">Expired</span>
                         {% elif member.certificate_status == 'expiring' %}
-                          <span class="badge badge-warning" style="background-color: #ffc107; color: #212529;">Expiring Soon</span>
+                          <span class="badge badge-warning status-badge">Expiring Soon</span>
                         {% elif member.certificate_status == 'valid' %}
-                          <span class="badge badge-success" style="background-color: #28a745; color: white;">Valid</span>
+                          <span class="badge badge-success status-badge">Valid</span>
                         {% else %}
-                          <span class="badge badge-secondary" style="background-color: #6c757d; color: white;">Unknown</span>
+                          <span class="badge badge-secondary status-badge">Unknown</span>
                         {% endif %}
                       </td>
                       <td class="{% if member.is_certificate_expired or member.is_certificate_expiring_soon %}text-danger font-weight-bold{% endif %}">
@@ -191,7 +209,7 @@
                           -
                         {% endif %}
                       </td>
-                      <td>
+                      <td class="no-print">
                         <div class="btn-group" role="group">
                           <a href="{% url 'member_detail' member.id %}" class="btn btn-sm btn-info" title="View Details">
                             <i class="ri-eye-line"></i>
@@ -228,17 +246,29 @@
                 {% else %}
                   <tr>
                     <td colspan="10" class="text-center py-4">
-                      No members found. <a href="{% url 'create_member' %}">Add your first member</a>.
+                      No members found. <a href="{% url 'create_member' %}" class="no-print">Add your first member</a><span class="print-only d-none">No members found.</span>.
                     </td>
                   </tr>
                 {% endif %}
               </tbody>
             </table>
           </div>
+
+          <!-- Print Footer -->
+          <div class="print-footer d-none mt-4" style="display: none;">
+            <div class="row">
+              <div class="col-md-6">
+                <strong>Total Members: </strong>{{ members|length }}
+              </div>
+              <div class="col-md-6 text-right">
+                <strong>Report Generated: </strong>{{ current_date|date:"M d, Y g:i A" }}
+              </div>
+            </div>
+          </div>
         </div>
 
         {% if members.has_other_pages %}
-        <div class="card-footer bg-white">
+        <div class="card-footer bg-white no-print">
           <nav aria-label="Members pagination">
             <ul class="pagination justify-content-center mb-0">
               {% if members.has_previous %}
@@ -270,6 +300,9 @@
   </div>
 </div>
 
+<!-- Add html2pdf library for PDF generation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
 <style>
 .category-badges {
   max-width: 200px;
@@ -289,6 +322,206 @@
   display: inline-block;
   margin-right: 0.25rem;
   margin-bottom: 0.25rem;
+}
+
+/* Enhanced badge styling with explicit colors */
+.status-badge.badge-danger {
+  background-color: #dc3545 !important;
+  color: white !important;
+}
+
+.status-badge.badge-warning {
+  background-color: #ffc107 !important;
+  color: #212529 !important;
+}
+
+.status-badge.badge-success {
+  background-color: #28a745 !important;
+  color: white !important;
+}
+
+.status-badge.badge-secondary {
+  background-color: #6c757d !important;
+  color: white !important;
+}
+
+/* Print and PDF specific styles */
+@media print {
+  /* Hide non-essential elements */
+  .btn, .btn-group, #bulk-actions, #filters-section, .no-print, .card-footer {
+    display: none !important;
+  }
+  
+  /* Show print-only elements */
+  .print-header, .print-footer {
+    display: block !important;
+  }
+  
+  .print-only {
+    display: inline !important;
+  }
+  
+  /* Page formatting */
+  @page {
+    size: A4;
+    margin: 0.5in;
+  }
+  
+  body {
+    font-size: 11px;
+    line-height: 1.3;
+    color: #000 !important;
+  }
+  
+  /* Card styling for print */
+  .card {
+    border: 1px solid #000 !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+  
+  .card-header {
+    background-color: #f8f9fa !important;
+    color: #000 !important;
+    border-bottom: 2px solid #000 !important;
+  }
+  
+  /* Table styling */
+  .table {
+    font-size: 10px;
+    break-inside: auto;
+  }
+  
+  .table thead {
+    break-inside: avoid;
+    break-after: auto;
+  }
+  
+  .table tbody tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  
+  .table thead th {
+    background-color: #f8f9fa !important;
+    color: #000 !important;
+    border: 1px solid #000 !important;
+    font-weight: bold;
+    padding: 8px 4px;
+  }
+  
+  .table td {
+    border: 1px solid #ddd !important;
+    padding: 6px 4px;
+    color: #000 !important;
+  }
+  
+  /* Badge colors for print - CRITICAL for visibility */
+  .badge {
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    border: 1px solid !important;
+  }
+  
+  .status-badge.badge-danger {
+    background-color: #dc3545 !important;
+    color: white !important;
+    border-color: #dc3545 !important;
+  }
+  
+  .status-badge.badge-warning {
+    background-color: #ffc107 !important;
+    color: #000 !important;
+    border-color: #ffc107 !important;
+  }
+  
+  .status-badge.badge-success {
+    background-color: #28a745 !important;
+    color: white !important;
+    border-color: #28a745 !important;
+  }
+  
+  .status-badge.badge-secondary {
+    background-color: #6c757d !important;
+    color: white !important;
+    border-color: #6c757d !important;
+  }
+  
+  .badge-info {
+    background-color: #17a2b8 !important;
+    color: white !important;
+    border-color: #17a2b8 !important;
+  }
+  
+  /* Text colors */
+  .text-success {
+    color: #28a745 !important;
+  }
+  
+  .text-danger {
+    color: #dc3545 !important;
+  }
+  
+  .text-warning {
+    color: #856404 !important;
+  }
+  
+  /* Prevent widows and orphans */
+  p, .table tbody tr {
+    orphans: 3;
+    widows: 3;
+  }
+  
+  /* Headings */
+  h1, h2, h3, h4, h5, h6 {
+    break-after: avoid;
+    orphans: 3;
+    widows: 3;
+  }
+  
+  /* Print header styling */
+  .print-header h2 {
+    font-size: 18px;
+    margin-bottom: 10px;
+  }
+  
+  .print-header p {
+    font-size: 12px;
+    margin-bottom: 5px;
+  }
+  
+  .print-footer {
+    font-size: 10px;
+    margin-top: 20px;
+    border-top: 1px solid #000;
+    padding-top: 10px;
+  }
+  
+  /* Force table to fit page width */
+  .table-responsive {
+    overflow: visible !important;
+  }
+  
+  /* Adjust column widths for better fit */
+  .table th:nth-child(1), .table td:nth-child(1) { width: 25%; } /* Company Name */
+  .table th:nth-child(2), .table td:nth-child(2) { width: 15%; } /* Categories */
+  .table th:nth-child(3), .table td:nth-child(3) { width: 12%; } /* Certificate Status */
+  .table th:nth-child(4), .table td:nth-child(4) { width: 12%; } /* Expiry Date */
+  .table th:nth-child(5), .table td:nth-child(5) { width: 12%; } /* Days Left */
+  .table th:nth-child(6), .table td:nth-child(6) { width: 12%; } /* National Reg */
+  .table th:nth-child(7), .table td:nth-child(7) { width: 12%; } /* Enugu Reg */
+}
+
+/* Screen-only styles */
+@media screen {
+  .print-header, .print-footer {
+    display: none !important;
+  }
+  
+  .print-only {
+    display: none !important;
+  }
 }
 </style>
 
@@ -359,6 +592,47 @@ function applyFilters() {
   window.location.href = url.toString();
 }
 
+// PDF Download function
+function downloadPDF() {
+  // Show print elements temporarily for PDF generation
+  const printHeader = document.querySelector('.print-header');
+  const printFooter = document.querySelector('.print-footer');
+  
+  printHeader.style.display = 'block';
+  printFooter.style.display = 'block';
+  
+  const element = document.getElementById('report-content');
+  
+  const opt = {
+    margin: 0.3,
+    filename: 'REDAN_Members_List_{{ current_date|date:"Y_m_d_His" }}.pdf',
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { 
+      scale: 2, 
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff'
+    },
+    jsPDF: { 
+      unit: 'in', 
+      format: 'a4', 
+      orientation: 'landscape' // Better for wide tables
+    },
+    pagebreak: { 
+      mode: ['avoid-all', 'css', 'legacy'],
+      before: '.page-break-before',
+      after: '.page-break-after',
+      avoid: '.member-row'
+    }
+  };
+
+  html2pdf().set(opt).from(element).save().then(() => {
+    // Hide print elements after PDF generation
+    printHeader.style.display = 'none';
+    printFooter.style.display = 'none';
+  });
+}
+
 document.getElementById('memberSearch').addEventListener('keyup', function(e) {
   if (e.key === 'Enter') {
     applyFilters();
@@ -369,5 +643,13 @@ document.getElementById('memberSearch').addEventListener('keyup', function(e) {
 
 document.getElementById('statusFilter').addEventListener('change', applyFilters);
 document.getElementById('categoryFilter').addEventListener('change', applyFilters);
+
+// Set current date for template context
+document.addEventListener('DOMContentLoaded', function() {
+  // This ensures the date is available for the PDF filename
+  if (!window.current_date) {
+    window.current_date = new Date().toISOString().slice(0, 19).replace(/[-:]/g, '').replace('T', '_');
+  }
+});
 </script>
 {% endblock %}
