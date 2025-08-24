@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.http import HttpResponse
@@ -8,7 +8,7 @@ from django.core.paginator import Paginator
 from django.db.models import Count, Q, Sum
 from django.db.models import Count, Q, Sum
 from django.http import JsonResponse
-from .models import Income, Expense, CompanyBalance, Member,Gallery, ExecutiveCouncil,FormUpload, SecretaryAdmin
+from .models import Income, Expense, CompanyBalance, Member,Gallery, ExecutiveCouncil,FormUpload, SecretaryAdmin,RedanTVVideo
 from django.views.decorators.csrf import csrf_exempt
 import json
 from datetime import datetime
@@ -97,9 +97,17 @@ def gallery(request):
     
     return render(request, "frontend/gallery.html", context)
 
-def redantv(request):
-    return render(request, "frontend/redanenugutv.html")
 
+def redantv(request):
+    """Display Redan TV videos from database"""
+    videos = RedanTVVideo.objects.filter(is_active=True).order_by('order', '-created_at')
+    
+    context = {
+        'videos': videos,
+        'total_videos': videos.count(),
+    }
+    
+    return render(request, "frontend/redanenugutv.html", context)
 
 def downloadables(request):
     """View to display all available forms for download"""
@@ -2402,3 +2410,180 @@ def get_member_email_count(request):
     })
 
 # Preview function removed - not needed
+
+
+# views.py (add these views to your existing views.py)
+
+
+
+# Helper function to check if user is admin/staff
+def is_admin(user):
+    return user.is_authenticated and (user.is_staff or user.is_superuser)
+
+@login_required
+@user_passes_test(is_admin)
+@admin_required
+def redan_tv_admin(request):
+    """Admin page for managing Redan TV videos"""
+    all_videos = RedanTVVideo.objects.all().order_by('order', '-created_at')
+    active_videos = all_videos.filter(is_active=True)
+    inactive_videos = all_videos.filter(is_active=False)
+    
+    context = {
+        'all_videos': all_videos,
+        'active_videos': active_videos,
+        'inactive_videos': inactive_videos,
+    }
+    
+    return render(request, 'user/redan_tv_admin.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def add_tv_video(request):
+    """Add new TV video"""
+    if request.method == 'POST':
+        try:
+            title = request.POST.get('title', '').strip()
+            youtube_url = request.POST.get('youtube_url', '').strip()
+            order = request.POST.get('order', 0)
+            is_active = 'is_active' in request.POST
+            
+            # Validation
+            if not title:
+                messages.error(request, 'Video title is required.')
+                return redirect('redan_tv_admin')
+            
+            if not youtube_url:
+                messages.error(request, 'YouTube URL is required.')
+                return redirect('redan_tv_admin')
+            
+            # Validate YouTube URL
+            if 'youtube.com' not in youtube_url and 'youtu.be' not in youtube_url:
+                messages.error(request, 'Please provide a valid YouTube URL.')
+                return redirect('redan_tv_admin')
+            
+            # Convert order to int, default to 0
+            try:
+                order = int(order) if order else 0
+            except ValueError:
+                order = 0
+            
+            # Create video
+            video = RedanTVVideo.objects.create(
+                title=title,
+                youtube_url=youtube_url,
+                order=order,
+                is_active=is_active
+            )
+            
+            messages.success(request, f'Video "{title}" has been added successfully.')
+            
+        except Exception as e:
+            messages.error(request, f'Error adding video: {str(e)}')
+    
+    return redirect('redan_tv_admin')
+
+@login_required
+@user_passes_test(is_admin)
+def edit_tv_video(request):
+    """Edit existing TV video"""
+    if request.method == 'POST':
+        try:
+            video_id = request.POST.get('video_id')
+            video = get_object_or_404(RedanTVVideo, id=video_id)
+            
+            title = request.POST.get('title', '').strip()
+            youtube_url = request.POST.get('youtube_url', '').strip()
+            order = request.POST.get('order', 0)
+            is_active = 'is_active' in request.POST
+            
+            # Validation
+            if not title:
+                messages.error(request, 'Video title is required.')
+                return redirect('redan_tv_admin')
+            
+            if not youtube_url:
+                messages.error(request, 'YouTube URL is required.')
+                return redirect('redan_tv_admin')
+            
+            # Validate YouTube URL
+            if 'youtube.com' not in youtube_url and 'youtu.be' not in youtube_url:
+                messages.error(request, 'Please provide a valid YouTube URL.')
+                return redirect('redan_tv_admin')
+            
+            # Convert order to int
+            try:
+                order = int(order) if order else 0
+            except ValueError:
+                order = 0
+            
+            # Update video
+            video.title = title
+            video.youtube_url = youtube_url
+            video.order = order
+            video.is_active = is_active
+            video.save()
+            
+            messages.success(request, f'Video "{title}" has been updated successfully.')
+            
+        except Exception as e:
+            messages.error(request, f'Error updating video: {str(e)}')
+    
+    return redirect('redan_tv_admin')
+
+@login_required
+@user_passes_test(is_admin)
+def delete_tv_video(request):
+    """Delete TV video"""
+    if request.method == 'POST':
+        try:
+            video_id = request.POST.get('video_id')
+            video = get_object_or_404(RedanTVVideo, id=video_id)
+            video_title = video.title
+            
+            video.delete()
+            messages.success(request, f'Video "{video_title}" has been deleted successfully.')
+            
+        except Exception as e:
+            messages.error(request, f'Error deleting video: {str(e)}')
+    
+    return redirect('redan_tv_admin')
+
+@login_required
+@user_passes_test(is_admin)
+def toggle_video_status(request):
+    """Toggle video active status"""
+    if request.method == 'POST':
+        try:
+            video_id = request.POST.get('video_id')
+            video = get_object_or_404(RedanTVVideo, id=video_id)
+            
+            video.is_active = not video.is_active
+            video.save()
+            
+            status = "activated" if video.is_active else "deactivated"
+            messages.success(request, f'Video "{video.title}" has been {status}.')
+            
+        except Exception as e:
+            messages.error(request, f'Error updating video status: {str(e)}')
+    
+    return redirect('redan_tv_admin')
+
+# AJAX endpoint for reordering videos (optional)
+@login_required
+@user_passes_test(is_admin)
+def reorder_videos(request):
+    """AJAX endpoint to reorder videos"""
+    if request.method == 'POST':
+        try:
+            video_orders = request.POST.getlist('video_order[]')
+            
+            for i, video_id in enumerate(video_orders, 1):
+                RedanTVVideo.objects.filter(id=video_id).update(order=i)
+            
+            return JsonResponse({'success': True, 'message': 'Videos reordered successfully.'})
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request method.'})

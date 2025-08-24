@@ -1,0 +1,77 @@
+<!-- user/partials/video_card.html -->
+<div class="col-lg-4 col-md-6 mb-4">
+    <div class="video-card-admin">
+        <div class="position-relative">
+            <img src="{{ video.get_thumbnail_url }}" alt="{{ video.title }}" class="video-thumbnail-admin">
+            
+            <!-- Status Badge -->
+            {% if video.is_active %}
+                <span class="badge bg-success video-status-badge">Active</span>
+            {% else %}
+                <span class="badge bg-secondary video-status-badge">Inactive</span>
+            {% endif %}
+            
+            <!-- Order Badge -->
+            <span class="video-order-badge">#{{ video.order }}</span>
+        </div>
+        
+        <div class="p-3">
+            <h6 class="mb-2" style="min-height: 48px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                {{ video.title }}
+            </h6>
+            
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <small class="text-muted">
+                    <i class="ri-calendar-line"></i> {{ video.created_at|date:"M d, Y" }}
+                </small>
+                <small class="text-muted">
+                    ID: {{ video.get_youtube_id }}
+                </small>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="btn-group w-100" role="group">
+                <a href="{{ video.youtube_url }}" class="btn btn-outline-info btn-sm" target="_blank" title="Watch on YouTube">
+                    <i class="ri-external-link-line"></i>
+                </a>
+                
+                <button type="button" class="btn btn-outline-primary btn-sm edit-video-btn" 
+                        data-bs-toggle="modal" data-bs-target="#edit-video-modal"
+                        data-id="{{ video.id }}"
+                        data-title="{{ video.title }}"
+                        data-youtube-url="{{ video.youtube_url }}"
+                        data-order="{{ video.order }}"
+                        data-is-active="{{ video.is_active }}"
+                        title="Edit Video">
+                    <i class="ri-edit-line"></i>
+                </button>
+                
+                {% if video.is_active %}
+                <form method="post" action="{% url 'toggle_video_status' %}" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="video_id" value="{{ video.id }}">
+                    <button type="submit" class="btn btn-outline-warning btn-sm" title="Deactivate">
+                        <i class="ri-eye-off-line"></i>
+                    </button>
+                </form>
+                {% else %}
+                <form method="post" action="{% url 'toggle_video_status' %}" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="video_id" value="{{ video.id }}">
+                    <button type="submit" class="btn btn-outline-success btn-sm" title="Activate">
+                        <i class="ri-eye-line"></i>
+                    </button>
+                </form>
+                {% endif %}
+                
+                <button type="button" class="btn btn-outline-danger btn-sm delete-video-btn"
+                        data-bs-toggle="modal" data-bs-target="#delete-video-modal"
+                        data-id="{{ video.id }}"
+                        data-title="{{ video.title }}"
+                        title="Delete Video">
+                    <i class="ri-delete-bin-line"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

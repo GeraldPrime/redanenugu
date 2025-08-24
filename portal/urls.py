@@ -105,6 +105,15 @@ urlpatterns = [
     path('send-email/', views.send_email_to_members, name='send_email_to_members'),
     path('get-member-email-count/', views.get_member_email_count, name='get_member_email_count'),
     
+    
+    # Redan TV Admin URLs (protect these with login_required)
+    #  Custom Admin URLs (avoid conflict with Django admin)
+    path('dashboard/redantv/', views.redan_tv_admin, name='redan_tv_admin'),
+    path('dashboard/redantv/add/', views.add_tv_video, name='add_tv_video'),
+    path('dashboard/redantv/edit/', views.edit_tv_video, name='edit_tv_video'),
+    path('dashboard/redantv/delete/', views.delete_tv_video, name='delete_tv_video'),
+    path('dashboard/redantv/toggle-status/', views.toggle_video_status, name='toggle_video_status'),
+    path('dashboard/redantv/reorder/', views.reorder_videos, name='reorder_videos'),  # Optional AJAX endpoint
 
  ]
 if settings.DEBUG:  # Only serve media files during development

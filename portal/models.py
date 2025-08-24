@@ -506,3 +506,43 @@ class SecretaryAdmin(models.Model):
         return f"{self.full_name} - {self.email}"
     
     
+class RedanTVVideo(models.Model):
+    title = models.CharField(max_length=200, help_text="Video title")
+    youtube_url = models.URLField(help_text="Full YouTube video URL (e.g., https://www.youtube.com/watch?v=dQw4w9WgXcQ)")
+    order = models.IntegerField(default=0, help_text="Display order (lower numbers appear first)")
+    is_active = models.BooleanField(default=True, help_text="Show this video on the website")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['order', '-created_at']
+        verbose_name = "Redan TV Video"
+        verbose_name_plural = "Redan TV Videos"
+
+    def __str__(self):
+        return self.title
+
+    def get_youtube_id(self):
+        """Extract YouTube video ID from URL"""
+        if 'youtube.com/watch?v=' in self.youtube_url:
+            return self.youtube_url.split('watch?v=')[1].split('&')[0]
+        elif 'youtu.be/' in self.youtube_url:
+            return self.youtube_url.split('youtu.be/')[1].split('?')[0]
+        return None
+
+    def get_thumbnail_url(self):
+        """Get YouTube thumbnail URL"""
+        video_id = self.get_youtube_id()
+        if video_id:
+            return f"https://img.youtube.com/vi/{video_id}/maxresdefault.jpg"
+        return None
+
+    def save(self, *args, **kwargs):
+        # Auto-assign order if not set
+        if self.order == 0 and not self.pk:
+            last_video = RedanTVVideo.objects.all().order_by('-order').first()
+            if last_video:
+                self.order = last_video.order + 1
+            else:
+                self.order = 1
+        super().save(*args, **kwargs)
