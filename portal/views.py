@@ -118,14 +118,34 @@ def downloadables(request):
     return render(request, "frontend/downloadables.html", context)
 
 def download_form(request, form_id):
-    """View to handle form downloads"""
+    """Download a form file (public download)"""
     form = get_object_or_404(FormUpload, id=form_id)
-    try:
-        response = HttpResponse(form.form_file.read(), content_type='application/octet-stream')
-        response['Content-Disposition'] = f'attachment; filename="{form.form_file.name}"'
-        return response
-    except FileNotFoundError:
-        raise Http404("File not found")
+
+    # Check if form has a file and the file exists
+    if form.form_file and form.form_file.name:
+        file_path = form.form_file.path
+
+        if os.path.exists(file_path):
+            # Get the file's content type
+            content_type, _ = mimetypes.guess_type(file_path)
+            if content_type is None:
+                content_type = 'application/octet-stream'
+
+            # Read the file
+            with open(file_path, 'rb') as f:
+                response = HttpResponse(f.read(), content_type=content_type)
+
+                # Get the original filename or use the form name with extension
+                original_filename = os.path.basename(form.form_file.name)
+                if not original_filename:
+                    original_filename = f"{form.name}.{form.file_type.lower()}"
+
+                response['Content-Disposition'] = f'attachment; filename=\"{original_filename}\"'
+                return response
+        else:
+            raise Http404("File not found on disk")
+    else:
+        raise Http404("No file associated with this form")
 def contact(request):
     if request.method == 'POST':
         # Get form data
@@ -1959,42 +1979,6 @@ def delete_form(request, form_id):
         messages.success(request, f"Form '{form_name}' has been deleted.")
     
     return redirect('forms_list')
-
-
-@login_required
-def download_form(request, form_id):
-    """Download a form file"""
-    form = get_object_or_404(FormUpload, id=form_id)
-    
-    # Check if form has a file and the file exists
-    if form.form_file and form.form_file.name:
-        file_path = form.form_file.path
-        
-        if os.path.exists(file_path):
-            # Get the file's content type
-            content_type, _ = mimetypes.guess_type(file_path)
-            if content_type is None:
-                content_type = 'application/octet-stream'
-            
-            # Read the file
-            with open(file_path, 'rb') as f:
-                response = HttpResponse(f.read(), content_type=content_type)
-                
-                # Get the original filename or use the form name with extension
-                original_filename = os.path.basename(form.form_file.name)
-                if not original_filename:
-                    original_filename = f"{form.name}.{form.file_type.lower()}"
-                
-                response['Content-Disposition'] = f'attachment; filename="{original_filename}"'
-                return response
-        else:
-            raise Http404("File not found on disk")
-    else:
-        raise Http404("No file associated with this form")
-
-
-
-
 
 
 # ========================SECRETARY ADMIN=================================
